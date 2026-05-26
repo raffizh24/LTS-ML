@@ -1,626 +1,435 @@
 <?php
-// ================= CONNECT DB =================
+session_start();
 require '../../conn.php';
 
-// ================= SESSION CHECK =================
-session_start();
-function setAlert($type, $msg)
-{
-    $_SESSION['alert'] = [
-        'type' => $type, // success | danger
-        'msg'  => $msg
-    ];
-}
-if (!isset($_SESSION['role']) || $_SESSION['role'] != 'Admin') {
-    header('location: ../../index.php');
+// =====================
+// CEK SESSION
+// =====================
+if (!isset($_SESSION['role']) || $_SESSION['role'] != 'ADMIN') {
+    header("Location: ../../index.php");
     exit;
 }
 
-// ================= LOGOUT =================
-if (isset($_POST['btn_logout'])) {
-    session_destroy();
-    header('location: ../../index.php');
-    exit;
-}
-
-// ================= ADD USER =================
-if (isset($_POST['btn_add_user'])) {
+// =====================
+// CREATE USER
+// =====================
+if (isset($_POST['btn_save'])) {
 
     $username = $_POST['username'];
     $password = $_POST['password'];
     $name     = $_POST['name'];
     $area     = $_POST['area'];
+    $process  = $_POST['process'];
     $role     = $_POST['role'];
 
-    if (mysqli_query(
-        $conn,
-        "INSERT INTO user_master (username,password,name,area,role)
-         VALUES ('$username','$password','$name','$area','$role')"
-    )) {
-        setAlert('success', 'User added successfully');
-    } else {
-        setAlert('danger', mysqli_error($conn));
-    }
+    $query = "INSERT INTO user_master 
+                (username, password, name, area, process, role)
+              VALUES
+                ('$username','$password','$name','$area','$process','$role')";
 
-    header("Location: index.php");
-    exit;
+    mysqli_query($conn, $query);
+
+    echo "<script>
+            alert('User berhasil ditambahkan');
+            window.location='index.php';
+          </script>";
 }
 
-// ================= GENERIC ADD MASTER =================
-$masterMap = [
-    'area'     => ['table' => 'area_master', 'field' => 'area_name'],
-    'defect'   => ['table' => 'defect_master', 'field' => 'defect_name'],
-    'cause'    => ['table' => 'cause_master', 'field' => 'cause_name'],
-    'category' => ['table' => 'category_master', 'field' => 'category_name'],
-    'action'   => ['table' => 'action_master', 'field' => 'action_name'],
-    'model'    => ['table' => 'model_master', 'field' => 'model_code'],
-];
+// =====================
+// DELETE USER
+// =====================
+if (isset($_GET['delete'])) {
 
-foreach ($masterMap as $key => $cfg) {
-    if (isset($_POST["add_$key"])) {
+    $id = $_GET['delete'];
 
-        $val = mysqli_real_escape_string($conn, $_POST[$cfg['field']]);
+    mysqli_query($conn, "DELETE FROM user_master WHERE user_id='$id'");
 
-        if (mysqli_query(
-            $conn,
-            "INSERT INTO {$cfg['table']} ({$cfg['field']}) VALUES ('$val')"
-        )) {
-            setAlert('success', ucfirst($key) . ' added successfully');
-            $_SESSION['active_master'] = $key; // <<< INI PENTING
-        } else {
-            setAlert('danger', mysqli_error($conn));
-        }
-
-        header("Location: index.php");
-        exit;
-    }
+    echo "<script>
+            alert('User berhasil dihapus');
+            window.location='index.php';
+          </script>";
 }
 
-// ================= FETCH DATA =================
-function fetchAll($conn, $table)
-{
-    $data = [];
-    $q = mysqli_query($conn, "SELECT * FROM $table ORDER BY 1 DESC");
-    while ($r = mysqli_fetch_assoc($q)) $data[] = $r;
-    return $data;
+// =====================
+// UPDATE USER
+// =====================
+if (isset($_POST['btn_update'])) {
+
+    $id       = $_POST['user_id'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $name     = $_POST['name'];
+    $area     = $_POST['area'];
+    $process  = $_POST['process'];
+    $role     = $_POST['role'];
+
+    $query = "UPDATE user_master SET
+                username = '$username',
+                password = '$password',
+                name     = '$name',
+                area     = '$area',
+                process  = '$process',
+                role     = '$role'
+              WHERE user_id='$id'";
+
+    mysqli_query($conn, $query);
+
+    echo "<script>
+            alert('User berhasil diupdate');
+            window.location='index.php';
+          </script>";
 }
 
-$users     = fetchAll($conn, 'user_master');
-$area      = fetchAll($conn, 'area_master');
-$defect    = fetchAll($conn, 'defect_master');
-$cause     = fetchAll($conn, 'cause_master');
-$category  = fetchAll($conn, 'category_master');
-$action    = fetchAll($conn, 'action_master');
-$model     = fetchAll($conn, 'model_master');
-
-// ================= EDIT USER =================
-if (isset($_POST['btn_update_user'])) {
-
-    $id   = $_POST['user_id'];
-    $name = $_POST['name'];
-    $area = $_POST['area'];
-    $role = $_POST['role'];
-
-    if (mysqli_query(
-        $conn,
-        "UPDATE user_master SET name='$name', area='$area', role='$role'
-         WHERE user_id='$id'"
-    )) {
-        setAlert('success', 'User updated successfully');
-    } else {
-        setAlert('danger', mysqli_error($conn));
-    }
-
-    header("Location: index.php");
-    exit;
-}
-
-// ================= DELETE USER =================
-if (isset($_POST['btn_delete_user'])) {
-
-    $id = $_POST['user_id'];
-
-    if (mysqli_query(
-        $conn,
-        "DELETE FROM user_master WHERE user_id='$id'"
-    )) {
-        setAlert('success', 'User deleted successfully');
-    } else {
-        setAlert('danger', mysqli_error($conn));
-    }
-
-    header("Location: index.php");
-    exit;
-}
-
-// ================= UPDATE MASTER =================
-if (isset($_POST['btn_update_master'])) {
-
-    $id    = $_POST['master_id'];
-    $table = $_POST['master_type'];
-    $value = mysqli_real_escape_string($conn, $_POST['master_name']);
-
-    $map = [
-        'area_master'     => ['pk' => 'area_id', 'field' => 'area_name'],
-        'defect_master'   => ['pk' => 'defect_id', 'field' => 'defect_name'],
-        'cause_master'    => ['pk' => 'cause_id', 'field' => 'cause_name'],
-        'category_master' => ['pk' => 'category_id', 'field' => 'category_name'],
-        'action_master'   => ['pk' => 'action_id', 'field' => 'action_name'],
-        'model_master'    => ['pk' => 'model_code', 'field' => 'model_code'],
-    ];
-
-    if (!isset($map[$table])) {
-        setAlert('danger', 'Invalid master table');
-        header("Location: index.php");
-        exit;
-    }
-
-    $pk    = $map[$table]['pk'];
-    $field = $map[$table]['field'];
-
-    if (mysqli_query(
-        $conn,
-        "UPDATE $table SET $field='$value' WHERE $pk='$id'"
-    )) {
-        setAlert('success', 'Data updated successfully');
-    } else {
-        setAlert('danger', mysqli_error($conn));
-    }
-
-    header("Location: index.php");
-    exit;
-}
-
-// ================= DELETE MASTER =================
-if (isset($_POST['btn_delete_master'])) {
-
-    $id    = $_POST['master_id'];
-    $table = $_POST['master_type'];
-
-    $pkMap = [
-        'area_master'     => 'area_id',
-        'defect_master'   => 'defect_id',
-        'cause_master'    => 'cause_id',
-        'category_master' => 'category_id',
-        'action_master'   => 'action_id',
-        'model_master'    => 'model_code',
-    ];
-
-    if (!isset($pkMap[$table])) {
-        setAlert('danger', 'Invalid master table');
-        header("Location: index.php");
-        exit;
-    }
-
-    if (mysqli_query(
-        $conn,
-        "DELETE FROM $table WHERE {$pkMap[$table]}='$id'"
-    )) {
-        setAlert('success', 'Data deleted successfully');
-    } else {
-        setAlert('danger', mysqli_error($conn));
-    }
-
-    header("Location: index.php");
-    exit;
-}
+// =====================
+// GET DATA USER
+// =====================
+$dataUser = mysqli_query($conn, "SELECT * FROM user_master ORDER BY user_id DESC");
 ?>
+
 <!doctype html>
-<html lang="en" data-bs-theme="auto">
+<html lang="en">
 
 <head>
-    <title>TCS-Production</title>
-    <script src="../../js/color-modes.js"></script>
-    <script src="../../js/jquery-3.7.1.js"></script>
-    <script src="../../js/jquery-ui.js"></script>
-    <link rel="stylesheet" href="../../css/jquery-ui.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/dashboard.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../css/style.css" rel="stylesheet">
-    <style>
-        .btn-sm {
-            width: 100px;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - User Master</title>
 
-        .master-card {
-            display: none;
-        }
-
-        .btn-master {
-            width: 100px;
-        }
-    </style>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
 
-<body>
-    <!-- Themes Mode -->
-    <?php include '../../library/themes.php'; ?>
-    <div class="container-fluid text-center">
-        <!-- ROW 1 -->
-        <div class="row my-3">
-            <div class="col text-start">
-                <button class="btn btn-sm btn-outline-success" disabled>Admin</button>
-            </div>
-            <div class="col text-center">
-                <a href="index.php" class="btn btn-sm btn-primary">Dashboard</a>
-                <a href="linking.php" class="btn btn-sm btn-outline-primary">Linking</a>
-            </div>
-            <div class="col text-end">
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</button>
-            </div>
+<body class="bg-light">
 
-            <!-- Modal Logout -->
-            <div class="text-start modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form action="" method="POST">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="logoutModalLabel">Notification</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                Logout?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                                <button type="submit" class="btn btn-primary" name="btn_logout">Yes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                ADMIN PANEL - USER MASTER
+            </span>
+
+            <div class="text-white">
+                <?= $_SESSION['name']; ?>
+                |
+                <a href="../../logout.php" class="btn btn-sm btn-light">
+                    Logout
+                </a>
             </div>
         </div>
-        <!-- ROW 2 -->
-        <h3 class="mt-5">Data Master</h3>
-        <?php if (isset($_SESSION['alert'])): ?>
-            <div class="alert alert-<?= $_SESSION['alert']['type'] ?> alert-dismissible fade show" role="alert">
-                <?= $_SESSION['alert']['msg'] ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <?php unset($_SESSION['alert']); ?>
-        <?php endif; ?>
-        <div class="mb-3">
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'user')">User</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'area')">Area</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'defect')">Defect</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'cause')">Cause</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'category')">Category</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'action')">Action</button>
-            <button class="btn btn-sm btn-outline-primary btn-master" onclick="showMaster(this,'model')">Model</button>
-        </div>
-        <!-- ROW 3 -->
-        <div class="row">
-            <!-- ================= USER MASTER ================= -->
-            <div class="col-lg-6 mx-auto master-card" id="card-user">
-                <div class="card">
-                    <div class="card-header">
-                        <b>User Master</b>
-                        <button class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#addUser">Add</button>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Name</th>
-                                    <th>Area</th>
-                                    <th>Role</th>
-                                    <th style="width: 100px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($users as $u): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($u['username']) ?></td>
-                                        <td><?= htmlspecialchars($u['name']) ?></td>
-                                        <td><?= htmlspecialchars($u['area']) ?></td>
-                                        <td><?= htmlspecialchars($u['role']) ?></td>
-                                        <td>
-                                            <button
-                                                class="btn btn-sm btn-warning btn-manage-user"
-                                                data-id="<?= $u['user_id'] ?>"
-                                                data-username="<?= htmlspecialchars($u['username']) ?>"
-                                                data-name="<?= htmlspecialchars($u['name']) ?>"
-                                                data-area="<?= htmlspecialchars($u['area']) ?>"
-                                                data-role="<?= htmlspecialchars($u['role']) ?>"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#manageUserModal">
-                                                Manage
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- ADD USER MODAL -->
-                <div class="modal fade" id="addUser">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form method="POST" class="modal-content">
-                            <div class="modal-header">
-                                <h5>Add User</h5>
-                            </div>
-                            <div class="modal-body">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="floatingUsername" name="username">
-                                    <label for="floatingUsername">Username</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="floatingPassword" name="password">
-                                    <label for="floatingPassword">Password</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="floatingName" name="name">
-                                    <label for="floatingName">Name</label>
-                                </div>
-                                <div class="form-floating mt-3">
-                                    <select class="form-select" id="floatingSelect" name="area">
-                                        <option value="IDU">IDU</option>
-                                        <option value="ODU">ODU</option>
-                                    </select>
-                                    <label for="floatingSelect">Area</label>
-                                </div>
-                                <div class="form-floating mt-3">
-                                    <select class="form-select" id="floatingSelect" name="role">
-                                        <option value="Operator">Operator</option>
-                                        <option value="Repair">Repair</option>
-                                        <option value="Leader">Leader</option>
-                                    </select>
-                                    <label for="floatingSelect">Role</label>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary" name="btn_add_user">Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <!-- EDIT USER MODAL -->
-                <div class="modal fade" id="manageUserModal" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form method="POST" class="modal-content">
-                            <input type="hidden" name="user_id" id="editUserId">
+    </nav>
 
-                            <div class="modal-header">
-                                <h5 class="modal-title">Manage User</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
+    <div class="container mt-4">
 
-                            <div class="modal-body">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" name="username" id="editUsername" readonly>
-                                    <label>Username</label>
-                                </div>
-
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" name="name" id="editName">
-                                    <label>Name</label>
-                                </div>
-
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" name="area" id="editArea">
-                                        <option value="IDU">IDU</option>
-                                        <option value="ODU">ODU</option>
-                                        <option value="ALL">ALL</option>
-                                    </select>
-                                    <label>Area</label>
-                                </div>
-
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" name="role" id="editRole">
-                                        <option value="Operator">Operator</option>
-                                        <option value="Repair">Repair</option>
-                                        <option value="Leader">Leader</option>
-                                        <option value="Admin">Admin</option>
-                                    </select>
-                                    <label>Role</label>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" name="btn_delete_user" class="btn btn-danger me-auto"
-                                    onclick="return confirm('Delete this user?')">
-                                    Delete
-                                </button>
-                                <button type="submit" name="btn_update_user" class="btn btn-primary">
-                                    Update
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        <!-- CARD FORM -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                Tambah User
             </div>
 
-            <!-- ================= MASTER GENERIC ================= -->
-            <?php
-            $masters = [
-                [
-                    'id'    => 'area',
-                    'data'  => $area,
-                    'title' => 'Area',
-                    'field' => 'area_name',
-                    'pk'    => 'area_id',
-                    'table' => 'area_master',
-                    'btn'   => 'add_area'
-                ],
-                [
-                    'id'    => 'defect',
-                    'data'  => $defect,
-                    'title' => 'Defect',
-                    'field' => 'defect_name',
-                    'pk'    => 'defect_id',
-                    'table' => 'defect_master',
-                    'btn'   => 'add_defect'
-                ],
-                [
-                    'id'    => 'cause',
-                    'data'  => $cause,
-                    'title' => 'Cause',
-                    'field' => 'cause_name',
-                    'pk'    => 'cause_id',
-                    'table' => 'cause_master',
-                    'btn'   => 'add_cause'
-                ],
-                [
-                    'id'    => 'category',
-                    'data'  => $category,
-                    'title' => 'Category',
-                    'field' => 'category_name',
-                    'pk'    => 'category_id',
-                    'table' => 'category_master',
-                    'btn'   => 'add_category'
-                ],
-                [
-                    'id'    => 'action',
-                    'data'  => $action,
-                    'title' => 'Action',
-                    'field' => 'action_name',
-                    'pk'    => 'action_id',
-                    'table' => 'action_master',
-                    'btn'   => 'add_action'
-                ],
-                [
-                    'id'    => 'model',
-                    'data'  => $model,
-                    'title' => 'Model',
-                    'field' => 'model_code',
-                    'pk'    => 'model_code',
-                    'table' => 'model_master',
-                    'btn'   => 'add_model'
-                ],
-            ];
+            <div class="card-body">
 
-            // ================= Render master cards =================
-            foreach ($masters as $m): ?>
-                <div class="col-lg-6 master-card mx-auto" id="card-<?= $m['id'] ?>">
-                    <?php
-                    $data  = $m['data'];
-                    $title = $m['title'];
-                    $field = $m['field'];
-                    $pk    = $m['pk'];
-                    $table = $m['table'];
-                    $btn   = $m['btn'];
-                    ?>
-                    <?php include 'partial/master_card.php'; ?>
-                </div>
-            <?php endforeach ?>
+                <form method="POST" autocomplete="off">
 
-            <!-- ================= Modal Master ================= -->
-            <div class="modal fade" id="manageMasterModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form method="POST" class="modal-content">
-                        <input type="hidden" name="master_id" id="editMasterId">
-                        <input type="hidden" name="master_type" id="editMasterType">
+                    <div class="row">
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">Manage Master</h5>
-                            <button class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="col-md-4 mb-3">
+                            <label>Username</label>
+                            <input type="text"
+                                name="username"
+                                class="form-control"
+                                required>
                         </div>
 
-                        <div class="modal-body">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" id="editMasterName" name="master_name">
-                                <label>Master Name</label>
-                            </div>
+                        <div class="col-md-4 mb-3">
+                            <label>Password</label>
+                            <input type="password"
+                                name="password"
+                                class="form-control"
+                                required>
                         </div>
 
-                        <div class="modal-footer">
-                            <button type="submit" name="btn_delete_master"
-                                class="btn btn-danger me-auto"
-                                onclick="return confirm('Delete this data?')">
-                                Delete
-                            </button>
-                            <button type="submit" name="btn_update_master" class="btn btn-primary">
-                                Update
-                            </button>
+                        <div class="col-md-4 mb-3">
+                            <label>Nama</label>
+                            <input type="text"
+                                name="name"
+                                class="form-control"
+                                required>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Area</label>
+
+                            <select name="area" class="form-select" required>
+                                <option value="">-- Pilih Area --</option>
+                                <option value="IDU">IDU</option>
+                                <option value="ODU">ODU</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Process</label>
+                            <input type="text"
+                                name="process"
+                                class="form-control"
+                                required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Role</label>
+
+                            <select name="role" class="form-select" required>
+                                <option value="">-- Pilih Role --</option>
+                                <option value="OPERATOR">OPERATOR</option>
+                                <option value="REPAIRMAN">REPAIRMAN</option>
+                                <option value="LEADER">LEADER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <button type="submit"
+                        name="btn_save"
+                        class="btn btn-primary">
+                        Simpan User
+                    </button>
+
+                </form>
+
             </div>
         </div>
-        <!-- Javascript -->
-        <script src="../../js/bootstrap.bundle.min.js"></script>
-        <!-- Button Menu -->
-        <script>
-            // Tampilkan master sesuai tombol diklik
-            function showMaster(btn, type) {
-                // simpan master aktif
-                localStorage.setItem('activeMaster', type);
 
-                document.querySelectorAll('.master-card').forEach(c => c.style.display = 'none');
-                document.querySelectorAll('.btn-master').forEach(b => {
-                    b.classList.remove('btn-primary');
-                    b.classList.add('btn-outline-primary');
-                });
+        <!-- TABEL USER -->
+        <div class="card shadow-sm">
 
-                btn.classList.remove('btn-outline-primary');
-                btn.classList.add('btn-primary');
+            <div class="card-header bg-dark text-white">
+                Data User
+            </div>
 
-                document.getElementById('card-' + type).style.display = 'block';
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                const active = localStorage.getItem('activeMaster');
+            <div class="card-body table-responsive">
 
-                if (active) {
-                    const btn = document.querySelector(
-                        `.btn-master[onclick*="'${active}'"]`
-                    );
-                    if (btn) btn.click();
-                }
-            });
-            // Cegah submit form saat tekan enter
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    const tag = e.target.tagName.toLowerCase();
+                <table class="table table-bordered table-hover align-middle">
 
-                    // Cegah enter di input (kecuali textarea)
-                    if (tag === 'input') {
-                        e.preventDefault();
-                        return false;
-                    }
-                }
-            });
-            // Isi data di modal manage user
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('btn-manage-user')) {
-                    document.getElementById('editUserId').value = e.target.dataset.id;
-                    document.getElementById('editUsername').value = e.target.dataset.username;
-                    document.getElementById('editName').value = e.target.dataset.name;
-                    document.getElementById('editArea').value = e.target.dataset.area;
-                    document.getElementById('editRole').value = e.target.dataset.role;
-                }
-            });
-            // Isi data di modal manage master
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('btn-manage-master')) {
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>No</th>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Area</th>
+                            <th>Process</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th width="180">Action</th>
+                        </tr>
+                    </thead>
 
-                    document.getElementById('editMasterId').value =
-                        e.target.dataset.id;
+                    <tbody>
 
-                    document.getElementById('editMasterName').value =
-                        e.target.dataset.name;
+                        <?php
+                        $no = 1;
+                        while ($row = mysqli_fetch_assoc($dataUser)) :
+                        ?>
 
-                    document.getElementById('editMasterType').value =
-                        e.target.dataset.table;
-                }
-            });
-        </script>
-        <?php if (isset($_SESSION['active_master'])): ?>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    showMaster(
-                        document.querySelector(
-                            "button[onclick=\"showMaster(this,'<?= $_SESSION['active_master'] ?>')\"]"
-                        ),
-                        "<?= $_SESSION['active_master'] ?>"
-                    );
-                });
-            </script>
-            <?php unset($_SESSION['active_master']); ?>
-        <?php endif; ?>
+                            <tr>
+
+                                <td class="text-center"><?= $no++; ?></td>
+
+                                <td><?= $row['username']; ?></td>
+
+                                <td><?= $row['name']; ?></td>
+
+                                <td class="text-center">
+                                    <?= $row['area']; ?>
+                                </td>
+
+                                <td><?= $row['process']; ?></td>
+
+                                <td class="text-center">
+                                    <?= $row['role']; ?>
+                                </td>
+
+                                <td>
+                                    <?= $row['created_at']; ?>
+                                </td>
+
+                                <td class="text-center">
+
+                                    <!-- BUTTON EDIT -->
+                                    <button
+                                        class="btn btn-warning btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#edit<?= $row['user_id']; ?>">
+                                        Edit
+                                    </button>
+
+                                    <!-- BUTTON DELETE -->
+                                    <a href="?delete=<?= $row['user_id']; ?>"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Yakin hapus user?')">
+                                        Delete
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                            <!-- MODAL EDIT -->
+                            <div class="modal fade"
+                                id="edit<?= $row['user_id']; ?>"
+                                tabindex="-1">
+
+                                <div class="modal-dialog modal-lg">
+
+                                    <div class="modal-content">
+
+                                        <form method="POST">
+
+                                            <div class="modal-header bg-warning">
+                                                <h5 class="modal-title">
+                                                    Edit User
+                                                </h5>
+
+                                                <button type="button"
+                                                    class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+
+                                                <input type="hidden"
+                                                    name="user_id"
+                                                    value="<?= $row['user_id']; ?>">
+
+                                                <div class="row">
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Username</label>
+
+                                                        <input type="text"
+                                                            name="username"
+                                                            class="form-control"
+                                                            value="<?= $row['username']; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Password</label>
+
+                                                        <input type="text"
+                                                            name="password"
+                                                            class="form-control"
+                                                            value="<?= $row['password']; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Name</label>
+
+                                                        <input type="text"
+                                                            name="name"
+                                                            class="form-control"
+                                                            value="<?= $row['name']; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Process</label>
+
+                                                        <input type="text"
+                                                            name="process"
+                                                            class="form-control"
+                                                            value="<?= $row['process']; ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Area</label>
+
+                                                        <select name="area"
+                                                            class="form-select"
+                                                            required>
+
+                                                            <option value="IDU"
+                                                                <?= ($row['area'] == 'IDU') ? 'selected' : ''; ?>>
+                                                                IDU
+                                                            </option>
+
+                                                            <option value="ODU"
+                                                                <?= ($row['area'] == 'ODU') ? 'selected' : ''; ?>>
+                                                                ODU
+                                                            </option>
+
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <label>Role</label>
+
+                                                        <select name="role"
+                                                            class="form-select"
+                                                            required>
+
+                                                            <option value="OPERATOR"
+                                                                <?= ($row['role'] == 'OPERATOR') ? 'selected' : ''; ?>>
+                                                                OPERATOR
+                                                            </option>
+
+                                                            <option value="LEADER"
+                                                                <?= ($row['role'] == 'LEADER') ? 'selected' : ''; ?>>
+                                                                LEADER
+                                                            </option>
+
+                                                            <option value="ADMIN"
+                                                                <?= ($row['role'] == 'ADMIN') ? 'selected' : ''; ?>>
+                                                                ADMIN
+                                                            </option>
+
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div class="modal-footer">
+
+                                                <button type="button"
+                                                    class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">
+                                                    Close
+                                                </button>
+
+                                                <button type="submit"
+                                                    name="btn_update"
+                                                    class="btn btn-warning">
+                                                    Update
+                                                </button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        <?php endwhile; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>
