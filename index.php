@@ -101,7 +101,6 @@ if (isset($_POST['btn_login'])) {
 
             <div class="text-center mb-4">
                 <h2 class="logo-title">TCS Production</h2>
-                <p class="text-muted">Silakan login untuk melanjutkan</p>
             </div>
 
             <form method="POST" autocomplete="off">
