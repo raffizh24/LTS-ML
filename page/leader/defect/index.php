@@ -1,19 +1,19 @@
 <?php
 session_start();
-require '../../conn.php';
+require '../../../conn.php';
 
 if (!isset($_SESSION['role'])) {
-    header("Location: ../../login.php");
+    header("Location: ../../../login.php");
     exit;
 }
 
 if ($_SESSION['role'] != 'LEADER' && $_SESSION['role'] != 'ADMIN') {
-    header("Location: ../../login.php");
+    header("Location: ../../../login.php");
     exit;
 }
 
-$table = "rootcause_master";
-$field = "rootcause_name";
+$table = "defect_master";
+$field = "defect_name";
 
 
 // CREATE
@@ -29,7 +29,7 @@ if (isset($_POST['btn_save'])) {
 
     echo "<script>
             alert('Data berhasil ditambahkan');
-            window.location='rootcause.php';
+            window.location='index.php';
           </script>";
 }
 
@@ -42,12 +42,12 @@ if (isset($_GET['delete'])) {
     mysqli_query(
         $conn,
         "DELETE FROM $table
-         WHERE rootcause_id='$id'"
+         WHERE defect_id='$id'"
     );
 
     echo "<script>
             alert('Data berhasil dihapus');
-            window.location='rootcause.php';
+            window.location='index.php';
           </script>";
 }
 
@@ -62,19 +62,19 @@ if (isset($_POST['btn_update'])) {
         $conn,
         "UPDATE $table
          SET $field='$name'
-         WHERE rootcause_id='$id'"
+         WHERE defect_id='$id'"
     );
 
     echo "<script>
             alert('Data berhasil diupdate');
-            window.location='rootcause.php';
+            window.location='index.php';
           </script>";
 }
 
 $data = mysqli_query(
     $conn,
     "SELECT * FROM $table
-     ORDER BY rootcause_id DESC"
+     ORDER BY defect_id DESC"
 );
 ?>
 
@@ -84,7 +84,7 @@ $data = mysqli_query(
 <head>
     <meta charset="UTF-8">
 
-    <title>Master Root Cause</title>
+    <title>Master Defect</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -95,9 +95,9 @@ $data = mysqli_query(
 
         <div class="d-flex justify-content-between mb-3">
 
-            <h3>Master Root Cause</h3>
+            <h3>Master Defect</h3>
 
-            <a href="index.php" class="btn btn-secondary">
+            <a href="../index.php" class="btn btn-secondary">
                 Back
             </a>
 
@@ -116,7 +116,7 @@ $data = mysqli_query(
                             <input type="text"
                                 name="name"
                                 class="form-control"
-                                placeholder="Input root cause..."
+                                placeholder="Input defect..."
                                 required>
                         </div>
 
@@ -147,7 +147,7 @@ $data = mysqli_query(
 
                         <tr>
                             <th width="80">No</th>
-                            <th>Root Cause Name</th>
+                            <th>Defect Name</th>
                             <th width="200">Action</th>
                         </tr>
 
@@ -171,11 +171,11 @@ $data = mysqli_query(
 
                                     <button class="btn btn-warning btn-sm"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#edit<?= $row['rootcause_id']; ?>">
+                                        data-bs-target="#edit<?= $row['defect_id']; ?>">
                                         Edit
                                     </button>
 
-                                    <a href="?delete=<?= $row['rootcause_id']; ?>"
+                                    <a href="?delete=<?= $row['defect_id']; ?>"
                                         class="btn btn-danger btn-sm"
                                         onclick="return confirm('Hapus data?')">
                                         Delete
@@ -187,7 +187,7 @@ $data = mysqli_query(
 
                             <!-- MODAL EDIT -->
                             <div class="modal fade"
-                                id="edit<?= $row['rootcause_id']; ?>">
+                                id="edit<?= $row['defect_id']; ?>">
 
                                 <div class="modal-dialog">
 
@@ -196,14 +196,14 @@ $data = mysqli_query(
                                         <form method="POST">
 
                                             <div class="modal-header">
-                                                <h5>Edit Root Cause</h5>
+                                                <h5>Edit Defect</h5>
                                             </div>
 
                                             <div class="modal-body">
 
                                                 <input type="hidden"
                                                     name="id"
-                                                    value="<?= $row['rootcause_id']; ?>">
+                                                    value="<?= $row['defect_id']; ?>">
 
                                                 <input type="text"
                                                     name="name"

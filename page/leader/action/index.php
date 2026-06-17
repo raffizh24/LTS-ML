@@ -1,14 +1,14 @@
 <?php
 session_start();
-require '../../conn.php';
+require '../../../conn.php';
 
 if (!isset($_SESSION['role'])) {
-    header("Location: ../../login.php");
+    header("Location: ../../../login.php");
     exit;
 }
 
 if ($_SESSION['role'] != 'LEADER') {
-    header("Location: ../../login.php");
+    header("Location: ../../../login.php");
     exit;
 }
 
@@ -29,7 +29,7 @@ if (isset($_POST['btn_save'])) {
 
     echo "<script>
             alert('Data berhasil ditambahkan');
-            window.location='action.php';
+            window.location='index.php';
           </script>";
 }
 
@@ -47,7 +47,7 @@ if (isset($_GET['delete'])) {
 
     echo "<script>
             alert('Data berhasil dihapus');
-            window.location='action.php';
+            window.location='index.php';
           </script>";
 }
 
@@ -67,7 +67,7 @@ if (isset($_POST['btn_update'])) {
 
     echo "<script>
             alert('Data berhasil diupdate');
-            window.location='action.php';
+            window.location='index.php';
           </script>";
 }
 
@@ -97,7 +97,7 @@ $data = mysqli_query(
 
             <h3>Master Action</h3>
 
-            <a href="index.php" class="btn btn-secondary">
+            <a href="../index.php" class="btn btn-secondary">
                 Back
             </a>
 
