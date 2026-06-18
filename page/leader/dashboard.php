@@ -6,7 +6,7 @@ require '../../conn.php';
 // CEK LOGIN
 // ======================
 if (!isset($_SESSION['role'])) {
-    header("Location: ../../login.php");
+    header("Location: ../../index.php");
     exit;
 }
 
@@ -14,7 +14,7 @@ if (
     $_SESSION['role'] != 'LEADER' &&
     $_SESSION['role'] != 'ADMIN'
 ) {
-    header("Location: ../../login.php");
+    header("Location: ../../index.php");
     exit;
 }
 
@@ -22,37 +22,54 @@ if (
 // ======================
 // FILTER
 // ======================
-$date_from = $_GET['date_from']
-    ?? date('Y-m-01');
+$filter_type = $_GET['filter_type'] ?? 'month';
 
-$date_to = $_GET['date_to']
-    ?? date('Y-m-d');
+$product_id = trim($_GET['product_id'] ?? '');
 
-$product_id = trim(
-    $_GET['product_id'] ?? ''
-);
+$month = $_GET['month'] ?? date('m');
+$year  = $_GET['year'] ?? date('Y');
 
+$date_from = $_GET['date_from'] ?? date('Y-m-01');
+$date_to   = $_GET['date_to'] ?? date('Y-m-d');
 
-// ======================
-// WHERE CLAUSE
-// ======================
-$where_sql = "
-DATE(created_at)
-BETWEEN '$date_from'
-AND '$date_to'
-";
+$where = [];
 
-if ($product_id != '') {
+// FILTER BULAN
+if ($filter_type == 'month') {
 
-    $where_sql .= "
-    AND product_id
-    LIKE '%$product_id%'
+    $where[] = "MONTH(created_at)='$month'";
+    $where[] = "YEAR(created_at)='$year'";
+}
+
+// FILTER CUSTOM DATE
+if ($filter_type == 'custom') {
+
+    $where[] = "
+    DATE(created_at)
+    BETWEEN '$date_from'
+    AND '$date_to'
     ";
 }
 
+// FILTER PRODUCT ID
+if ($product_id != '') {
+
+    $product_id_safe = mysqli_real_escape_string(
+        $conn,
+        $product_id
+    );
+
+    $where[] = "
+    product_id
+    LIKE '%$product_id_safe%'
+    ";
+}
+
+$where_sql = implode(' AND ', $where);
+
 $where_t = str_replace(
-    "created_at",
-    "t.created_at",
+    'created_at',
+    't.created_at',
     $where_sql
 );
 
@@ -62,12 +79,11 @@ $where_t = str_replace(
 // ======================
 $totalQuery = mysqli_query(
     $conn,
-    "SELECT
-        COUNT(*) total
-
+    "
+    SELECT COUNT(*) total
     FROM line_drop_transaction
-
-    WHERE $where_sql"
+    WHERE $where_sql
+"
 );
 
 $totalData = mysqli_fetch_assoc($totalQuery);
@@ -78,24 +94,30 @@ $totalData = mysqli_fetch_assoc($totalQuery);
 // ======================
 $modelQuery = mysqli_query(
     $conn,
-    "SELECT
+    "
+    SELECT
         COUNT(DISTINCT model_code)
         total
 
     FROM line_drop_transaction
 
-    WHERE $where_sql"
+    WHERE $where_sql
+"
 );
 
 $modelData = mysqli_fetch_assoc($modelQuery);
 
 
 // ======================
-// DEFECT DATA
+// DEFECT
 // ======================
+$defectLabel = [];
+$defectTotal = [];
+
 $defectQuery = mysqli_query(
     $conn,
-    "SELECT
+    "
+    SELECT
         d.defect_name,
         COUNT(*) total
 
@@ -108,25 +130,27 @@ $defectQuery = mysqli_query(
 
     GROUP BY d.defect_name
 
-    ORDER BY total DESC"
+    ORDER BY total DESC
+"
 );
 
-$defectLabel = [];
-$defectTotal = [];
+while ($row = mysqli_fetch_assoc($defectQuery)) {
 
-while ($d = mysqli_fetch_assoc($defectQuery)) {
-
-    $defectLabel[] = $d['defect_name'];
-    $defectTotal[] = $d['total'];
+    $defectLabel[] = $row['defect_name'];
+    $defectTotal[] = $row['total'];
 }
 
 
 // ======================
-// CATEGORY DATA
+// CATEGORY
 // ======================
+$categoryLabel = [];
+$categoryTotal = [];
+
 $categoryQuery = mysqli_query(
     $conn,
-    "SELECT
+    "
+    SELECT
         c.category_name,
         COUNT(*) total
 
@@ -139,85 +163,27 @@ $categoryQuery = mysqli_query(
 
     GROUP BY c.category_name
 
-    ORDER BY total DESC"
+    ORDER BY total DESC
+"
 );
 
-$categoryLabel = [];
-$categoryTotal = [];
+while ($row = mysqli_fetch_assoc($categoryQuery)) {
 
-while ($c = mysqli_fetch_assoc($categoryQuery)) {
-
-    $categoryLabel[] = $c['category_name'];
-    $categoryTotal[] = $c['total'];
+    $categoryLabel[] = $row['category_name'];
+    $categoryTotal[] = $row['total'];
 }
 
 
 // ======================
-// ROOTCAUSE DATA
+// ROOTCAUSE
 // ======================
-$rootcauseQuery = mysqli_query(
-    $conn,
-    "SELECT
-        r.rootcause_name,
-        COUNT(*) total
-
-    FROM line_drop_transaction t
-
-    LEFT JOIN rootcause_master r
-        ON r.rootcause_id=t.rootcause_id
-
-    WHERE $where_t
-
-    GROUP BY r.rootcause_name
-
-    ORDER BY total DESC"
-);
-
 $rootLabel = [];
 $rootTotal = [];
 
-while ($r = mysqli_fetch_assoc($rootcauseQuery)) {
-
-    $rootLabel[] = $r['rootcause_name'];
-    $rootTotal[] = $r['total'];
-}
-
-
-// ======================
-// TOP DEFECT
-// ======================
-$topDefectQuery = mysqli_query(
+$rootQuery = mysqli_query(
     $conn,
-    "SELECT
-        d.defect_name,
-        COUNT(*) total
-
-    FROM line_drop_transaction t
-
-    LEFT JOIN defect_master d
-        ON d.defect_id=t.defect_id
-
-    WHERE $where_t
-
-    GROUP BY d.defect_name
-
-    ORDER BY total DESC
-
-    LIMIT 1"
-);
-
-$topDefect =
-    mysqli_fetch_assoc(
-        $topDefectQuery
-    );
-
-
-// ======================
-// TOP ROOTCAUSE
-// ======================
-$topRootQuery = mysqli_query(
-    $conn,
-    "SELECT
+    "
+    SELECT
         r.rootcause_name,
         COUNT(*) total
 
@@ -231,22 +197,26 @@ $topRootQuery = mysqli_query(
     GROUP BY r.rootcause_name
 
     ORDER BY total DESC
-
-    LIMIT 1"
+"
 );
 
-$topRoot =
-    mysqli_fetch_assoc(
-        $topRootQuery
-    );
+while ($row = mysqli_fetch_assoc($rootQuery)) {
+
+    $rootLabel[] = $row['rootcause_name'];
+    $rootTotal[] = $row['total'];
+}
 
 
 // ======================
-// TREND HARIAN
+// TREND
 // ======================
+$trendLabel = [];
+$trendData = [];
+
 $trendQuery = mysqli_query(
     $conn,
-    "SELECT
+    "
+    SELECT
         DATE(created_at) tgl,
         COUNT(*) total
 
@@ -256,22 +226,20 @@ $trendQuery = mysqli_query(
 
     GROUP BY DATE(created_at)
 
-    ORDER BY DATE(created_at)"
+    ORDER BY DATE(created_at)
+"
 );
 
-$trendLabel = [];
-$trendData = [];
-
-while ($t = mysqli_fetch_assoc($trendQuery)) {
+while ($row = mysqli_fetch_assoc($trendQuery)) {
 
     $trendLabel[] =
         date(
             'd M',
-            strtotime($t['tgl'])
+            strtotime($row['tgl'])
         );
 
     $trendData[] =
-        $t['total'];
+        $row['total'];
 }
 
 
@@ -280,7 +248,8 @@ while ($t = mysqli_fetch_assoc($trendQuery)) {
 // ======================
 $historyQuery = mysqli_query(
     $conn,
-    "SELECT
+    "
+    SELECT
 
         t.*,
 
@@ -308,8 +277,8 @@ $historyQuery = mysqli_query(
 
     WHERE $where_t
 
-    ORDER BY
-        t.transaction_id DESC"
+    ORDER BY t.transaction_id DESC
+"
 );
 ?>
 
@@ -352,8 +321,6 @@ $historyQuery = mysqli_query(
 </head>
 
 <body>
-
-
     <!-- NAVBAR -->
     <nav class="navbar navbar-dark bg-primary shadow">
         <span class="navbar-brand">
@@ -381,104 +348,206 @@ $historyQuery = mysqli_query(
 
         </div>
 
-        <!-- FILTER -->
-        <div class="card shadow-sm mb-4">
+        <div class="row mb-4">
 
-            <div class="card-header bg-primary text-white">
+            <!-- FILTER MONTH -->
+            <div class="col-md-6">
 
-                Filter Dashboard
+                <div class="card shadow-sm h-100">
 
-            </div>
+                    <div class="card-header bg-primary text-white py-2">
+                        Filter By Month
+                    </div>
 
-            <div class="card-body">
+                    <div class="card-body">
 
-                <form method="GET">
+                        <form method="GET">
 
-                    <div class="row g-3">
+                            <input type="hidden"
+                                name="filter_type"
+                                value="month">
 
-                        <div class="col-md-2">
+                            <div class="row g-2">
 
-                            <label>Date From</label>
+                                <div class="col-md-4">
 
-                            <input
-                                type="date"
-                                name="date_from"
-                                class="form-control"
-                                value="<?= $date_from ?>">
+                                    <label class="small fw-bold">
+                                        Month
+                                    </label>
 
-                        </div>
+                                    <select
+                                        name="month"
+                                        class="form-select form-select-sm">
 
-                        <div class="col-md-2">
+                                        <?php
+                                        for ($m = 1; $m <= 12; $m++) :
 
-                            <label>Date To</label>
+                                            $val = sprintf('%02d', $m);
+                                        ?>
 
-                            <input
-                                type="date"
-                                name="date_to"
-                                class="form-control"
-                                value="<?= $date_to ?>">
+                                            <option
+                                                value="<?= $val ?>"
+                                                <?= ($month == $val) ? 'selected' : '' ?>>
 
-                        </div>
+                                                <?= date(
+                                                    'M',
+                                                    mktime(0, 0, 0, $m, 1)
+                                                ) ?>
 
-                        <div class="col-md-3">
+                                            </option>
 
-                            <label>Product ID</label>
+                                        <?php endfor; ?>
 
-                            <input
-                                type="text"
-                                name="product_id"
-                                class="form-control"
-                                placeholder="Search Product ID..."
-                                value="<?= htmlspecialchars($product_id) ?>">
+                                    </select>
 
-                        </div>
+                                </div>
 
-                        <div class="col-md-2 d-grid">
+                                <div class="col-md-3">
 
-                            <label>&nbsp;</label>
+                                    <label class="small fw-bold">
+                                        Year
+                                    </label>
 
-                            <button class="btn btn-primary">
+                                    <select
+                                        name="year"
+                                        class="form-select form-select-sm">
 
-                                Filter
+                                        <?php
+                                        for (
+                                            $y = date('Y');
+                                            $y >= 2024;
+                                            $y--
+                                        ) :
+                                        ?>
 
-                            </button>
+                                            <option
+                                                value="<?= $y ?>"
+                                                <?= ($year == $y) ? 'selected' : '' ?>>
 
-                        </div>
+                                                <?= $y ?>
 
-                        <div class="col-md-3">
+                                            </option>
 
-                            <label>&nbsp;</label>
+                                        <?php endfor; ?>
 
-                            <div>
+                                    </select>
 
-                                <a href="?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?>"
-                                    class="btn btn-outline-primary btn-sm">
+                                </div>
 
-                                    Today
+                                <div class="col-md-5">
 
-                                </a>
+                                    <label class="small fw-bold">
+                                        Product ID
+                                    </label>
 
-                                <a href="?date_from=<?= date('Y-m-01') ?>&date_to=<?= date('Y-m-d') ?>"
-                                    class="btn btn-outline-success btn-sm">
+                                    <input
+                                        type="text"
+                                        name="product_id"
+                                        class="form-control form-control-sm"
+                                        value="<?= htmlspecialchars($product_id) ?>">
 
-                                    Month
+                                </div>
 
-                                </a>
+                                <div class="col-12">
 
-                                <a href="?date_from=<?= date('Y-01-01') ?>&date_to=<?= date('Y-m-d') ?>"
-                                    class="btn btn-outline-warning btn-sm">
+                                    <button
+                                        class="btn btn-primary btn-sm w-100">
 
-                                    Year
+                                        Filter Month
 
-                                </a>
+                                    </button>
+
+                                </div>
 
                             </div>
 
-                        </div>
+                        </form>
 
                     </div>
 
-                </form>
+                </div>
+
+            </div>
+
+            <!-- FILTER CUSTOM -->
+            <div class="col-md-6">
+
+                <div class="card shadow-sm h-100">
+
+                    <div class="card-header bg-success text-white py-2">
+                        Filter Custom Date
+                    </div>
+
+                    <div class="card-body">
+
+                        <form method="GET">
+
+                            <input type="hidden"
+                                name="filter_type"
+                                value="custom">
+
+                            <div class="row g-2">
+
+                                <div class="col-md-4">
+
+                                    <label class="small fw-bold">
+                                        Date From
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        name="date_from"
+                                        class="form-control form-control-sm"
+                                        value="<?= $date_from ?>">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label class="small fw-bold">
+                                        Date To
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        name="date_to"
+                                        class="form-control form-control-sm"
+                                        value="<?= $date_to ?>">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label class="small fw-bold">
+                                        Product ID
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="product_id"
+                                        class="form-control form-control-sm"
+                                        value="<?= htmlspecialchars($product_id) ?>">
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <button
+                                        class="btn btn-success btn-sm w-100">
+
+                                        Filter Custom
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
 
             </div>
 
