@@ -700,7 +700,47 @@ $historyQuery = mysqli_query(
 
         <!-- HISTORY -->
         <div class="card shadow-sm mb-5">
+            <div class="card shadow-sm mb-3">
 
+                <div class="card-header bg-success text-white">
+                    Daily Report Excel
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+
+                            <label>Tanggal Report</label>
+
+                            <input
+                                type="date"
+                                id="report_date"
+                                class="form-control"
+                                value="<?= date('Y-m-d') ?>">
+
+                        </div>
+
+                        <div class="col-md-2 d-grid">
+
+                            <label>&nbsp;</label>
+
+                            <button
+                                class="btn btn-success"
+                                onclick="copyReport()">
+
+                                Copy Excel
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
             <div class="card-header bg-dark text-white">
 
                 HISTORY LINE DROP
@@ -821,7 +861,26 @@ $historyQuery = mysqli_query(
 
     <!-- CHART JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function copyReport() {
+            let date =
+                document.getElementById('report_date').value;
 
+            fetch(
+                    'copy_report.php?date=' + date
+                )
+                .then(res => res.text())
+                .then(text => {
+
+                    navigator.clipboard.writeText(text);
+
+                    alert(
+                        'Data berhasil dicopy.\n\nPaste ke Excel dengan CTRL + V'
+                    );
+
+                });
+        }
+    </script>
     <script>
         // =====================
         // DEFECT BAR
