@@ -22,14 +22,11 @@ function loginUser($username, $password, $conn)
     $query = "SELECT * FROM user_master WHERE username = '$username'";
     $result = mysqli_query($conn, $query);
     $data = mysqli_fetch_assoc($result);
-
     if ($data && $password == $data['password']) {
-
         $_SESSION['username'] = $data['username'];
         $_SESSION['name']     = $data['name'];
         $_SESSION['area']     = $data['area'];
         $_SESSION['role']     = $data['role'];
-
         if ($data['role'] == 'ADMIN') {
             header('Location: page/admin/index.php');
         } elseif ($data['role'] == 'OPERATOR') {
@@ -58,7 +55,6 @@ if (isset($_GET['uid']) && isset($_GET['pwd'])) {
 if (isset($_POST['btn_login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
-
     loginUser($username, $password, $conn);
 }
 ?>
@@ -70,10 +66,8 @@ if (isset($_POST['btn_login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TCS Production</title>
-
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         body {
             background: linear-gradient(135deg, #0d6efd, #0dcaf0);
@@ -94,17 +88,12 @@ if (isset($_POST['btn_login'])) {
 </head>
 
 <body>
-
     <div class="container d-flex justify-content-center align-items-center vh-100">
-
         <div class="card shadow-lg login-card p-4">
-
             <div class="text-center mb-4">
                 <h2 class="logo-title">TCS Production</h2>
             </div>
-
             <form method="POST" autocomplete="off">
-
                 <div class="mb-3">
                     <label class="form-label">Username</label>
                     <input type="text"
@@ -113,7 +102,6 @@ if (isset($_POST['btn_login'])) {
                         placeholder="Masukkan username"
                         required>
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">Password</label>
                     <input type="password"
@@ -122,7 +110,6 @@ if (isset($_POST['btn_login'])) {
                         placeholder="Masukkan password"
                         required>
                 </div>
-
                 <div class="d-grid">
                     <button type="submit"
                         name="btn_login"
@@ -130,19 +117,14 @@ if (isset($_POST['btn_login'])) {
                         Login
                     </button>
                 </div>
-
             </form>
-
             <div class="text-center mt-4">
                 <small class="text-muted">
                     © <?= date('Y') ?> TCS Production
                 </small>
             </div>
-
         </div>
-
     </div>
-
 </body>
 
 </html>

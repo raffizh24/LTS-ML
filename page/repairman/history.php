@@ -18,13 +18,12 @@ if (
 }
 
 $username = $_SESSION['username'];
-
+$area = $_SESSION['area'];
 
 // =========================
 // UPDATE DATA
 // =========================
 if (isset($_POST['btn_update'])) {
-
     $id            = $_POST['transaction_id'];
     $defect_id     = $_POST['defect_id'];
     $category_id   = $_POST['category_id'];
@@ -155,16 +154,16 @@ $data = mysqli_query($conn, $query);
                 |
 
                 <a href="index.php"
-                    class="btn btn-light btn-sm">
+                    class="btn btn-secondary">
 
-                    Input Line Drop
+                    Back
 
                 </a>
 
                 |
 
                 <a href="../../logout.php"
-                    class="btn btn-danger btn-sm">
+                    class="btn btn-danger">
 
                     Logout
 
@@ -176,20 +175,13 @@ $data = mysqli_query($conn, $query);
 
     </nav>
 
-
     <div class="container-fluid mt-4">
-
         <div class="card shadow-sm">
-
             <div class="card-header bg-dark text-white">
-
                 <h5 class="mb-0">
-
                     History Hari Ini :
                     <?= date('d-m-Y'); ?>
-
                 </h5>
-
             </div>
 
             <div class="card-body table-responsive">
