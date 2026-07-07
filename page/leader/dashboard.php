@@ -567,15 +567,13 @@ $historyQuery = mysqli_query(
                                     if ($canEdit):
                                     ?>
                                         <a
-                                            href="edit_line_drop.php?id=<?= $h['transaction_id']; ?>"
+                                            href="revision/edit_line_drop.php?id=<?= $h['transaction_id']; ?>"
                                             class="btn btn-warning btn-sm">
                                             Edit
                                         </a>
                                         <button
                                             class="btn btn-danger btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal"
-                                            onclick="setDeleteId(<?= $h['transaction_id']; ?>)">
+                                            onclick="if(confirm('Are you sure to delete this record?')){ window.location.href='revision/delete_line_drop.php?id=<?= $h['transaction_id']; ?>'; }">
                                             Delete
                                         </button>
                                     <?php else: ?>
@@ -697,13 +695,6 @@ $historyQuery = mysqli_query(
                 }
             }
         });
-    </script>
-    <script>
-        function setDeleteId(id) {
-            document
-                .getElementById("btnDelete")
-                .href = "delete_line_drop.php?id=" + id;
-        }
     </script>
 </body>
 
