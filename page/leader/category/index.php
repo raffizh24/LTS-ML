@@ -74,7 +74,7 @@ if (isset($_POST['btn_update'])) {
 $data = mysqli_query(
     $conn,
     "SELECT * FROM $table
-     ORDER BY category_id DESC"
+     ORDER BY category_name ASC"
 );
 ?>
 

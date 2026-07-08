@@ -65,7 +65,7 @@ if (isset($_POST['btn_update'])) {
 $data = mysqli_query(
     $conn,
     "SELECT * FROM $table WHERE area='$area'
-     ORDER BY rootcause_id DESC"
+     ORDER BY rootcause_name ASC"
 );
 ?>
 

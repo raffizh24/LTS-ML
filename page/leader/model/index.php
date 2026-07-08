@@ -63,7 +63,7 @@ if (isset($_POST['btn_update'])) {
 $data = mysqli_query(
     $conn,
     "SELECT * FROM $table WHERE area='$area'
-     ORDER BY model_id DESC"
+     ORDER BY model_name ASC"
 );
 ?>
 
