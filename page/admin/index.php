@@ -166,6 +166,7 @@ $dataUser = mysqli_query($conn, "SELECT * FROM user_master ORDER BY user_id DESC
                         <tr>
                             <th>No</th>
                             <th>Username</th>
+                            <th>Password</th>
                             <th>Name</th>
                             <th>Area</th>
                             <th>Role</th>
@@ -181,6 +182,7 @@ $dataUser = mysqli_query($conn, "SELECT * FROM user_master ORDER BY user_id DESC
                             <tr>
                                 <td class="text-center"><?= $no++; ?></td>
                                 <td><?= $row['username']; ?></td>
+                                <td><?= $row['password']; ?></td>
                                 <td><?= $row['name']; ?></td>
                                 <td class="text-center">
                                     <?= $row['area']; ?>
