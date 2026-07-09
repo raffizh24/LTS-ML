@@ -1,0 +1,19 @@
+====================================================
+Tanggal      : 2026-07-09 08:16:06
+User         : leader_idu_a (Dewa & Rifki)
+IP Address   : ::1
+Action       : DELETE
+Transaction  : 16
+Product ID   : 5195DBZ3AHA5BEY2
+Model        : AHA5BEY2
+Area         : IDU
+Defect       : EGWV - ACW NG
+Category     : Part
+Root Cause   : PWB NG
+Action       : Change PWB
+Remark       : 
+Created By   : repairman_idu_a
+Created Name : Repairman IDU A
+Created At   : 2026-07-09 07:55:33
+====================================================
+

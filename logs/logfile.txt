@@ -1,0 +1,132 @@
+====================================================
+Tanggal       : 2026-07-09 08:01:44
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 9
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Area          : IDU
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal       : 2026-07-09 08:04:20
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 12
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Area          : IDU
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal       : 2026-07-09 08:07:07
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 10
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Area          : IDU
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal       : 2026-07-09 08:08:37
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 11
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal       : 2026-07-09 08:13:34
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 13
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Area          : IDU
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal       : 2026-07-09 08:14:06
+User          : leader_idu_a (Dewa & Rifki)
+IP Address    : ::1
+Action        : DELETE
+Transaction   : 14
+Product ID    : 5195DBZ3AHA5BEY2
+Model         : AHA5BEY2
+Area          : IDU
+Defect        : EGWV - ACW NG
+Category      : Part
+Root Cause    : PWB NG
+Action Prod.  : Change PWB
+Remark        : 
+Created By    : repairman_idu_a
+Created Name  : Repairman IDU A
+Created At    : 2026-07-09 07:55:33
+====================================================
+
+====================================================
+Tanggal      : 2026-07-09 08:15:29
+User         : leader_idu_a (Dewa & Rifki)
+IP Address   : ::1
+Action       : DELETE
+Transaction  : 15
+Product ID   : 5195DBZ3AHA5BEY2
+Model        : AHA5BEY2
+Area         : IDU
+Defect       : EGWV - ACW NG
+Category     : Part
+Root Cause   : PWB NG
+Action       : Change PWB
+Remark       : 
+Created By   : repairman_idu_a
+Created Name : Repairman IDU A
+Created At   : 2026-07-09 07:55:33
+====================================================
+
