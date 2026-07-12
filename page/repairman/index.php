@@ -18,17 +18,64 @@ if (
     exit;
 }
 
-// SIMPAN DATA
+// Button Save
 if (isset($_POST['btn_save'])) {
-    $product_id = $_POST['product_id'];
-    $model_code = $_POST['model_code'];
-    $defect_id  = $_POST['defect_id'];
-    $category_id = $_POST['category_id'];
-    $rootcause_id = $_POST['rootcause_id'];
-    $action_id = $_POST['action_id'];
-    $remark = $_POST['remark'];
+
+    $product_id   = mysqli_real_escape_string($conn, $_POST['product_id']);
+    $model_code   = mysqli_real_escape_string($conn, $_POST['model_code']);
+    $defect_id    = mysqli_real_escape_string($conn, $_POST['defect_id']);
+    $category_id  = mysqli_real_escape_string($conn, $_POST['category_id']);
+    $rootcause_id = mysqli_real_escape_string($conn, $_POST['rootcause_id']);
+    $action_id    = mysqli_real_escape_string($conn, $_POST['action_id']);
+    $remark       = mysqli_real_escape_string($conn, $_POST['remark']);
+
     $username = $_SESSION['username'];
     $name     = $_SESSION['name'];
+
+    // Upload evidence photo (optional)
+    $evidence_photo = '';
+
+    if (
+        isset($_FILES['evidence_photo']) &&
+        $_FILES['evidence_photo']['error'] == 0
+    ) {
+
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+        $ext = strtolower(
+            pathinfo(
+                $_FILES['evidence_photo']['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+        if (in_array($ext, $allowed)) {
+
+            $filename =
+                'LD_' .
+                date('YmdHis') .
+                '_' .
+                rand(1000, 9999) .
+                '.' .
+                $ext;
+
+            $upload_dir = '../../uploads/';
+
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            if (
+                move_uploaded_file(
+                    $_FILES['evidence_photo']['tmp_name'],
+                    $upload_dir . $filename
+                )
+            ) {
+                $evidence_photo = $filename;
+            }
+        }
+    }
+
     mysqli_query(
         $conn,
         "INSERT INTO line_drop_transaction
@@ -41,6 +88,7 @@ if (isset($_POST['btn_save'])) {
             rootcause_id,
             action_id,
             remark,
+            evidence_photo,
             created_by,
             created_name
         )
@@ -54,10 +102,12 @@ if (isset($_POST['btn_save'])) {
             '$rootcause_id',
             '$action_id',
             '$remark',
+            '$evidence_photo',
             '$username',
             '$name'
         )"
     );
+
     echo "<script>
             alert('Data Line Drop berhasil disimpan');
             window.location='index.php';
@@ -158,7 +208,7 @@ $actionData = mysqli_query(
                             class="mb-3">
                         </div>
                         <!-- FORM -->
-                        <form method="POST">
+                        <form method="POST" enctype="multipart/form-data">
                             <!-- PRODUCT ID -->
                             <div class="mb-3">
                                 <label class="form-label">
@@ -264,6 +314,17 @@ $actionData = mysqli_query(
                                     class="form-control"
                                     rows="3"></textarea>
                             </div>
+                            <!-- EVIDENCE PHOTO -->
+                            <div class="mb-3">
+                                <input type="file"
+                                    id="evidence_photo"
+                                    name="evidence_photo"
+                                    class="form-control"
+                                    accept="image/*"
+                                    capture="environment">
+
+                                <small id="photo_info" class="text-success"></small>
+                            </div>
                             <!-- BUTTON -->
                             <div class="d-grid">
                                 <button type="submit"
@@ -278,7 +339,7 @@ $actionData = mysqli_query(
             </div>
         </div>
     </div>
-
+    <script src="../../js/browser-image-compression.js"></script>
     <script>
         let html5QrCode;
         // START SCAN
@@ -319,6 +380,63 @@ $actionData = mysqli_query(
                 });
             }
         }
+    </script>
+    <script>
+        document.getElementById('evidence_photo').addEventListener(
+            'change',
+            async function(e) {
+
+                const file = e.target.files[0];
+
+                if (!file) return;
+
+                try {
+
+                    const options = {
+                        maxSizeMB: 0.2,
+                        maxWidthOrHeight: 1000,
+                        initialQuality: 0.6,
+                        useWebWorker: true
+                    };
+
+                    const compressedBlob =
+                        await imageCompression(file, options);
+
+                    const compressedFile =
+                        new File(
+                            [compressedBlob],
+                            file.name, {
+                                type: compressedBlob.type,
+                                lastModified: Date.now()
+                            }
+                        );
+
+                    const dt = new DataTransfer();
+
+                    dt.items.add(compressedFile);
+
+                    this.files = dt.files;
+
+                    console.log(
+                        'Original:',
+                        (file.size / 1024 / 1024).toFixed(2),
+                        'MB'
+                    );
+
+                    console.log(
+                        'Compressed:',
+                        (compressedFile.size / 1024 / 1024).toFixed(2),
+                        'MB'
+                    );
+
+                } catch (err) {
+
+                    console.error(err);
+
+                }
+
+            }
+        );
     </script>
 </body>
 

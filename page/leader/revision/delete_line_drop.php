@@ -72,8 +72,8 @@ if (mysqli_num_rows($query) == 0) {
 
     echo "
     <script>
-    alert('Data tidak ditemukan!');
-    window.location='../dashboard.php';
+        alert('Data tidak ditemukan!');
+        window.location='../dashboard.php';
     </script>";
 
     exit;
@@ -94,8 +94,8 @@ if ($selisih > 86400) {
 
     echo "
     <script>
-    alert('Data sudah lebih dari 24 jam, tidak dapat dihapus!');
-    window.location='../dashboard.php';
+        alert('Data sudah lebih dari 24 jam, tidak dapat dihapus!');
+        window.location='../dashboard.php';
     </script>";
 
     exit;
@@ -110,7 +110,6 @@ if ($selisih > 86400) {
 $username = $_SESSION['username'] ?? '-';
 $name     = $_SESSION['name'] ?? '-';
 
-
 $ip = $_SERVER['REMOTE_ADDR'] ?? '-';
 
 
@@ -118,7 +117,8 @@ $log  = "====================================================\n";
 $log .= "Tanggal      : " . date("Y-m-d H:i:s") . "\n";
 $log .= "User         : " . $username . " (" . $name . ")\n";
 $log .= "IP Address   : " . $ip . "\n";
-$log .= "Action       : DELETE\n";
+$log .= "Action       : DELETE\n\n";
+
 
 $log .= "Transaction  : " . $data['transaction_id'] . "\n";
 $log .= "Product ID   : " . $data['product_id'] . "\n";
@@ -132,28 +132,78 @@ $log .= "Action       : " . $data['action_name'] . "\n";
 
 $log .= "Remark       : " . $data['remark'] . "\n";
 
+
+$log .= "Evidence     : ";
+
+if (!empty($data['evidence_photo'])) {
+
+    $log .= $data['evidence_photo'];
+} else {
+
+    $log .= "No Photo";
+}
+
+$log .= "\n";
+
+
 $log .= "Created By   : " . $data['created_by'] . "\n";
 $log .= "Created Name : " . $data['created_name'] . "\n";
 $log .= "Created At   : " . $data['created_at'] . "\n";
+
 
 $log .= "====================================================\n\n";
 
 
 
+
 // ======================
-// TULIS LOG (SEBELUM DELETE)
+// SIMPAN LOG KE /logs
 // ======================
 
+$log_dir = "../../../logs/";
+
+
+if (!is_dir($log_dir)) {
+
+    mkdir($log_dir, 0777, true);
+}
+
+
+$log_file = $log_dir . "delete_line_drop.log";
+
+
 file_put_contents(
-    "logfile.txt",
+    $log_file,
     $log,
     FILE_APPEND | LOCK_EX
 );
 
 
 
+
+
 // ======================
-// HAPUS DATA
+// HAPUS FOTO EVIDENCE
+// ======================
+
+if (!empty($data['evidence_photo'])) {
+
+
+    $photo_path = "../../../uploads/" . $data['evidence_photo'];
+
+
+    if (file_exists($photo_path)) {
+
+        unlink($photo_path);
+    }
+}
+
+
+
+
+
+// ======================
+// HAPUS DATA DATABASE
 // ======================
 
 $delete = mysqli_query(
@@ -165,18 +215,21 @@ $delete = mysqli_query(
 );
 
 
+
 if ($delete) {
+
 
     echo "
     <script>
-    alert('Data berhasil dihapus.');
-    window.location='../dashboard.php';
+        alert('Data dan foto berhasil dihapus.');
+        window.location='../dashboard.php';
     </script>";
 } else {
 
+
     echo "
     <script>
-    alert('Gagal menghapus data.');
-    window.location='../dashboard.php';
+        alert('Gagal menghapus data.');
+        window.location='../dashboard.php';
     </script>";
 }

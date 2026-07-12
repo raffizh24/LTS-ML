@@ -524,6 +524,7 @@ $historyQuery = mysqli_query(
                             <th>Root Cause</th>
                             <th>Action</th>
                             <th>Remark</th>
+                            <th>Photo</th>
                             <th width="130px">Revision</th>
                         </tr>
                     </thead>
@@ -561,6 +562,27 @@ $historyQuery = mysqli_query(
                                     <?= $h['action_name']; ?>
                                 </td>
                                 <td><?= $h['remark']; ?></td>
+                                <td class="text-center">
+
+                                    <?php if (!empty($h['evidence_photo'])) : ?>
+
+                                        <a href="revision/detail_line_drop.php?id=<?= $h['transaction_id']; ?>"
+                                            class="btn btn-primary btn-sm">
+
+                                            <i class="bi bi-image"></i>
+                                            Detail
+
+                                        </a>
+
+                                    <?php else : ?>
+
+                                        <span class="badge bg-secondary">
+                                            No Photo
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </td>
                                 <td class="text-center">
                                     <?php
                                     $canEdit = (time() - strtotime($h['created_at'])) <= 86400;

@@ -37,73 +37,221 @@ $actionData = mysqli_query($conn, "SELECT * FROM action_master WHERE area='$area
 // UPDATE DATA
 // ======================
 if (isset($_POST['btn_update'])) {
+
+    date_default_timezone_set('Asia/Jakarta');
+
     $transaction_id = (int)$_POST['transaction_id'];
-    $defect_id = (int)$_POST['defect_id'];
-    $category_id = (int)$_POST['category_id'];
-    $rootcause_id = (int)$_POST['rootcause_id'];
-    $action_id = (int)$_POST['action_id'];
-    $remark = mysqli_real_escape_string($conn, $_POST['remark']);
-    // Cek apakah data masih ada dan sesuai area
-    $cek = mysqli_query(
+    $defect_id      = (int)$_POST['defect_id'];
+    $category_id    = (int)$_POST['category_id'];
+    $rootcause_id   = (int)$_POST['rootcause_id'];
+    $action_id      = (int)$_POST['action_id'];
+    $remark         = mysqli_real_escape_string($conn, $_POST['remark']);
+
+
+    // ======================
+    // AMBIL DATA LAMA
+    // ======================
+    $oldData = mysqli_query(
         $conn,
         "
-        SELECT created_at
-        FROM line_drop_transaction
-        WHERE transaction_id='$transaction_id'
-        AND area='$area'
+        SELECT 
+            t.*,
+            d.defect_name,
+            c.category_name,
+            r.rootcause_name,
+            a.action_name
+        FROM line_drop_transaction t
+
+        LEFT JOIN defect_master d
+            ON t.defect_id=d.defect_id
+
+        LEFT JOIN category_master c
+            ON t.category_id=c.category_id
+
+        LEFT JOIN rootcause_master r
+            ON t.rootcause_id=r.rootcause_id
+
+        LEFT JOIN action_master a
+            ON t.action_id=a.action_id
+
+        WHERE t.transaction_id='$transaction_id'
+        AND t.area='$area'
         "
     );
 
-    if (mysqli_num_rows($cek) == 0) {
+
+    if (mysqli_num_rows($oldData) == 0) {
+
         echo "
         <script>
-            alert('Data tidak ditemukan!');
-            window.location='../dashboard.php';
-        </script>
-        ";
+        alert('Data tidak ditemukan!');
+        window.location='../dashboard.php';
+        </script>";
+
         exit;
     }
-    $row = mysqli_fetch_assoc($cek);
-    // Cek maksimal 24 jam
-    if ((time() - strtotime($row['created_at'])) > 86400) {
+
+
+    $old = mysqli_fetch_assoc($oldData);
+
+
+
+    // ======================
+    // CEK 24 JAM
+    // ======================
+    if ((time() - strtotime($old['created_at'])) > 86400) {
+
         echo "
         <script>
-            alert('Data sudah lebih dari 24 jam dan tidak dapat diedit!');
-            window.location='../dashboard.php';
-        </script>
-        ";
+        alert('Data sudah lebih dari 24 jam!');
+        window.location='../dashboard.php';
+        </script>";
+
         exit;
     }
-    // Update
+
+
+
+    // ======================
+    // LOG EDIT
+    // ======================
+
+    $log = "";
+
+    $log .= "====================================================\n";
+    $log .= "DATE EDIT    : " . date("Y-m-d H:i:s") . "\n";
+
+    $log .= "USER         : " . $_SESSION['username'] .
+        " (" . $_SESSION['name'] . ")\n";
+
+    $log .= "IP ADDRESS   : " . $_SERVER['REMOTE_ADDR'] . "\n";
+
+    $log .= "ACTION       : UPDATE\n";
+
+    $log .= "TRANSACTION  : " . $old['transaction_id'] . "\n";
+
+    $log .= "PRODUCT ID   : " . $old['product_id'] . "\n";
+
+    $log .= "MODEL        : " . $old['model_code'] . "\n";
+
+    $log .= "AREA         : " . $old['area'] . "\n\n";
+
+
+    $log .= "----- BEFORE -----\n";
+
+    $log .= "DEFECT       : " . $old['defect_name'] . "\n";
+    $log .= "CATEGORY     : " . $old['category_name'] . "\n";
+    $log .= "ROOTCAUSE    : " . $old['rootcause_name'] . "\n";
+    $log .= "ACTION       : " . $old['action_name'] . "\n";
+    $log .= "REMARK       : " . $old['remark'] . "\n\n";
+
+
+    // ambil nama baru
+
+    $newDefect = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT defect_name FROM defect_master 
+             WHERE defect_id='$defect_id'"
+        )
+    );
+
+    $newCategory = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT category_name FROM category_master 
+             WHERE category_id='$category_id'"
+        )
+    );
+
+    $newRoot = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT rootcause_name FROM rootcause_master 
+             WHERE rootcause_id='$rootcause_id'"
+        )
+    );
+
+    $newAction = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "SELECT action_name FROM action_master 
+             WHERE action_id='$action_id'"
+        )
+    );
+
+
+    $log .= "----- AFTER -----\n";
+
+    $log .= "DEFECT       : " . $newDefect['defect_name'] . "\n";
+    $log .= "CATEGORY     : " . $newCategory['category_name'] . "\n";
+    $log .= "ROOTCAUSE    : " . $newRoot['rootcause_name'] . "\n";
+    $log .= "ACTION       : " . $newAction['action_name'] . "\n";
+    $log .= "REMARK       : " . $remark . "\n";
+
+
+    $log .= "====================================================\n\n";
+
+
+
+    // ======================
+    // SIMPAN LOG
+    // ======================
+
+    $log_folder = "../../../logs/";
+
+    if (!is_dir($log_folder)) {
+        mkdir($log_folder, 0777, true);
+    }
+
+
+    file_put_contents(
+        $log_folder . "edit_line_drop.log",
+        $log,
+        FILE_APPEND | LOCK_EX
+    );
+
+
+
+    // ======================
+    // UPDATE DATABASE
+    // ======================
+
     $update = mysqli_query(
         $conn,
         "
         UPDATE line_drop_transaction
         SET
-            defect_id = '$defect_id',
-            category_id = '$category_id',
-            rootcause_id = '$rootcause_id',
-            action_id = '$action_id',
-            remark = '$remark'
-        WHERE
-            transaction_id = '$transaction_id'
-            AND area = '$area'
+
+            defect_id='$defect_id',
+            category_id='$category_id',
+            rootcause_id='$rootcause_id',
+            action_id='$action_id',
+            remark='$remark'
+
+        WHERE transaction_id='$transaction_id'
+        AND area='$area'
         "
     );
+
+
+
     if ($update) {
+
         echo "
         <script>
-            alert('Data berhasil diupdate.');
-            window.location='../dashboard.php';
-        </script>
-        ";
+        alert('Data berhasil diupdate');
+        window.location='../dashboard.php';
+        </script>";
     } else {
+
         echo "
         <script>
-            alert('Gagal mengupdate data.');
-        </script>
-        ";
+        alert('Gagal update data');
+        </script>";
     }
+
+
     exit;
 }
 ?>
@@ -177,6 +325,30 @@ if (isset($_POST['btn_update'])) {
                             <div class="mb-3">
                                 <label class="form-label">Remark</label>
                                 <textarea name="remark" class="form-control" rows="3"><?= htmlspecialchars($data['remark']); ?></textarea>
+                            </div>
+                            <div class="mb-3">
+
+                                <label class="form-label">
+                                    Evidence Photo
+                                </label>
+
+                                <?php if (!empty($data['evidence_photo'])) : ?>
+
+                                    <br>
+
+                                    <img src="../../../uploads/<?= $data['evidence_photo']; ?>"
+                                        class="img-fluid rounded shadow"
+                                        style="max-width:300px;">
+
+                                    <br><br>
+                                <?php else : ?>
+
+                                    <div class="alert alert-secondary">
+                                        No Photo Available
+                                    </div>
+
+                                <?php endif; ?>
+
                             </div>
                             <div class="d-grid">
                                 <button type="submit" name="btn_update" class="btn btn-warning btn-lg">UPDATE LINE DROP</button>

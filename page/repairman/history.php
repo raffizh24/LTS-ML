@@ -21,36 +21,306 @@ $username = $_SESSION['username'];
 $area = $_SESSION['area'];
 
 // =========================
-// UPDATE DATA
+// UPDATE DATA + LOG
 // =========================
 if (isset($_POST['btn_update'])) {
-    $id            = $_POST['transaction_id'];
-    $defect_id     = $_POST['defect_id'];
-    $category_id   = $_POST['category_id'];
-    $rootcause_id  = $_POST['rootcause_id'];
-    $action_id     = $_POST['action_id'];
-    $remark        = $_POST['remark'];
+
+    date_default_timezone_set('Asia/Jakarta');
+
+
+    $id            = (int)$_POST['transaction_id'];
+    $defect_id     = (int)$_POST['defect_id'];
+    $category_id   = (int)$_POST['category_id'];
+    $rootcause_id  = (int)$_POST['rootcause_id'];
+    $action_id     = (int)$_POST['action_id'];
+    $remark        = mysqli_real_escape_string($conn, $_POST['remark']);
+
+
+
+    // =========================
+    // AMBIL DATA LAMA
+    // =========================
+
+    $oldQuery = mysqli_query(
+        $conn,
+        "
+        SELECT
+            t.*,
+            d.defect_name,
+            c.category_name,
+            r.rootcause_name,
+            a.action_name
+
+        FROM line_drop_transaction t
+
+        LEFT JOIN defect_master d
+            ON t.defect_id=d.defect_id
+
+        LEFT JOIN category_master c
+            ON t.category_id=c.category_id
+
+        LEFT JOIN rootcause_master r
+            ON t.rootcause_id=r.rootcause_id
+
+        LEFT JOIN action_master a
+            ON t.action_id=a.action_id
+
+        WHERE t.transaction_id='$id'
+        AND t.created_by='$username'
+        AND DATE(t.created_at)=CURDATE()
+        "
+    );
+
+
+    if (mysqli_num_rows($oldQuery) == 0) {
+
+        echo "
+        <script>
+        alert('Data tidak ditemukan');
+        window.location='history.php';
+        </script>";
+
+        exit;
+    }
+
+
+    $old = mysqli_fetch_assoc($oldQuery);
+
+
+
+    // =========================
+    // FOTO UPDATE
+    // =========================
+
+    $update_photo = "";
+
+
+    if (
+        isset($_FILES['evidence_photo']) &&
+        $_FILES['evidence_photo']['error'] == 0
+    ) {
+
+
+        if (
+            !empty($old['evidence_photo']) &&
+            file_exists('../../uploads/' . $old['evidence_photo'])
+        ) {
+
+            unlink(
+                '../../uploads/' . $old['evidence_photo']
+            );
+        }
+
+
+
+        $ext = strtolower(
+            pathinfo(
+                $_FILES['evidence_photo']['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+
+        $filename =
+            "LD_" .
+            date('YmdHis') .
+            "_" .
+            rand(1000, 9999) .
+            "." . $ext;
+
+
+        move_uploaded_file(
+            $_FILES['evidence_photo']['tmp_name'],
+            '../../uploads/' . $filename
+        );
+
+
+        $update_photo =
+            ", evidence_photo='$filename'";
+    }
+
+
+
+    // =========================
+    // LOG EDIT
+    // =========================
+
+
+    $log = "";
+
+    $log .= "====================================================\n";
+
+    $log .= "DATE EDIT    : " . date("Y-m-d H:i:s") . "\n";
+
+    $log .= "USER         : " . $_SESSION['username'] .
+        " (" . $_SESSION['name'] . ")\n";
+
+    $log .= "ROLE         : REPAIRMAN\n";
+
+    $log .= "IP ADDRESS   : " . $_SERVER['REMOTE_ADDR'] . "\n";
+
+    $log .= "ACTION       : UPDATE\n";
+
+
+    $log .= "TRANSACTION  : " . $old['transaction_id'] . "\n";
+
+    $log .= "PRODUCT ID   : " . $old['product_id'] . "\n";
+
+    $log .= "MODEL        : " . $old['model_code'] . "\n";
+
+    $log .= "AREA         : " . $old['area'] . "\n\n";
+
+
+
+    $log .= "----- BEFORE -----\n";
+
+    $log .= "DEFECT       : " . $old['defect_name'] . "\n";
+
+    $log .= "CATEGORY     : " . $old['category_name'] . "\n";
+
+    $log .= "ROOTCAUSE    : " . $old['rootcause_name'] . "\n";
+
+    $log .= "ACTION       : " . $old['action_name'] . "\n";
+
+    $log .= "REMARK       : " . $old['remark'] . "\n";
+
+    $log .= "PHOTO        : " . $old['evidence_photo'] . "\n\n";
+
+
+
+    // DATA BARU
+
+    $newDefect = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "
+            SELECT defect_name
+            FROM defect_master
+            WHERE defect_id='$defect_id'
+            "
+        )
+    );
+
+
+    $newCategory = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "
+            SELECT category_name
+            FROM category_master
+            WHERE category_id='$category_id'
+            "
+        )
+    );
+
+
+    $newRoot = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "
+            SELECT rootcause_name
+            FROM rootcause_master
+            WHERE rootcause_id='$rootcause_id'
+            "
+        )
+    );
+
+
+    $newAction = mysqli_fetch_assoc(
+        mysqli_query(
+            $conn,
+            "
+            SELECT action_name
+            FROM action_master
+            WHERE action_id='$action_id'
+            "
+        )
+    );
+
+
+
+    $log .= "----- AFTER -----\n";
+
+    $log .= "DEFECT       : " . $newDefect['defect_name'] . "\n";
+
+    $log .= "CATEGORY     : " . $newCategory['category_name'] . "\n";
+
+    $log .= "ROOTCAUSE    : " . $newRoot['rootcause_name'] . "\n";
+
+    $log .= "ACTION       : " . $newAction['action_name'] . "\n";
+
+    $log .= "REMARK       : " . $remark . "\n";
+
+
+    if ($update_photo != "") {
+
+        $log .= "PHOTO        : " . $filename . "\n";
+    } else {
+
+        $log .= "PHOTO        : No Change\n";
+    }
+
+
+    $log .= "====================================================\n\n";
+
+
+
+
+    // =========================
+    // SIMPAN LOG
+    // =========================
+
+    $log_folder = "../../logs/";
+
+
+    if (!is_dir($log_folder)) {
+        mkdir($log_folder, 0777, true);
+    }
+
+
+
+    file_put_contents(
+        $log_folder . "edit_line_drop_repairman.log",
+        $log,
+        FILE_APPEND | LOCK_EX
+    );
+
+
+
+
+    // =========================
+    // UPDATE DATABASE
+    // =========================
+
 
     mysqli_query(
         $conn,
-        "UPDATE line_drop_transaction SET
+        "
+        UPDATE line_drop_transaction SET
 
-            defect_id      = '$defect_id',
-            category_id    = '$category_id',
-            rootcause_id   = '$rootcause_id',
-            action_id      = '$action_id',
-            remark         = '$remark'
+            defect_id='$defect_id',
+            category_id='$category_id',
+            rootcause_id='$rootcause_id',
+            action_id='$action_id',
+            remark='$remark'
 
-        WHERE transaction_id = '$id'
-        AND created_by = '$username'
-        AND DATE(created_at) = CURDATE()
-    "
+            $update_photo
+
+
+        WHERE transaction_id='$id'
+
+        AND created_by='$username'
+
+        AND DATE(created_at)=CURDATE()
+        "
     );
 
-    echo "<script>
-            alert('Data berhasil diupdate');
-            window.location='history.php';
-          </script>";
+
+    echo "
+    <script>
+    alert('Data berhasil diupdate');
+    window.location='history.php';
+    </script>";
 }
 
 
@@ -209,6 +479,7 @@ $data = mysqli_query($conn, $query);
                             <th>Action</th>
 
                             <th>Remark</th>
+                            <th>Evidence</th>
 
                             <th width="120">
                                 Action
@@ -271,6 +542,27 @@ $data = mysqli_query($conn, $query);
 
                                 <td class="text-center">
 
+                                    <?php if (!empty($row['evidence_photo'])) : ?>
+
+                                        <a href="../../uploads/<?= $row['evidence_photo']; ?>"
+                                            target="_blank">
+
+                                            <img src="../../uploads/<?= $row['evidence_photo']; ?>"
+                                                width="80"
+                                                class="img-thumbnail">
+
+                                        </a>
+
+                                    <?php else : ?>
+
+                                        -
+
+                                    <?php endif; ?>
+
+                                </td>
+
+                                <td class="text-center">
+
                                     <button class="btn btn-warning btn-sm"
                                         data-bs-toggle="modal"
                                         data-bs-target="#edit<?= $row['transaction_id']; ?>">
@@ -293,7 +585,7 @@ $data = mysqli_query($conn, $query);
 
                                     <div class="modal-content">
 
-                                        <form method="POST">
+                                        <form method="POST" enctype="multipart/form-data">
 
                                             <div class="modal-header bg-warning">
 
@@ -457,6 +749,37 @@ $data = mysqli_query($conn, $query);
                                                     <textarea name="remark"
                                                         class="form-control"
                                                         rows="3"><?= $row['remark']; ?></textarea>
+
+                                                </div>
+                                                <!-- EVIDENCE PHOTO -->
+                                                <div class="mb-3">
+
+                                                    <label>Evidence Photo</label>
+
+                                                    <?php if (!empty($row['evidence_photo'])) : ?>
+
+                                                        <div class="mb-2">
+                                                            <a href="../../uploads/<?= $row['evidence_photo']; ?>"
+                                                                target="_blank">
+
+                                                                <img src="../../uploads/<?= $row['evidence_photo']; ?>"
+                                                                    class="img-thumbnail"
+                                                                    style="max-width:200px;">
+
+                                                            </a>
+                                                        </div>
+
+                                                    <?php endif; ?>
+
+                                                    <input type="file"
+                                                        name="evidence_photo"
+                                                        class="form-control"
+                                                        accept="image/*"
+                                                        capture="environment">
+
+                                                    <small class="text-muted">
+                                                        Kosongkan jika tidak ingin mengganti foto
+                                                    </small>
 
                                                 </div>
 
