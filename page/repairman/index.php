@@ -32,32 +32,25 @@ if (isset($_POST['btn_save'])) {
     $username = $_SESSION['username'];
     $name     = $_SESSION['name'];
 
-    // Upload evidence photo (optional)
+    // ===================================
+    // SAVE PHOTO FROM CAMERA (BASE64)
+    // ===================================
+
     $evidence_photo = '';
 
-    if (
-        isset($_FILES['evidence_photo']) &&
-        $_FILES['evidence_photo']['error'] == 0
-    ) {
+    if (!empty($_POST['photo_base64'])) {
 
-        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $image = $_POST['photo_base64'];
 
-        $ext = strtolower(
-            pathinfo(
-                $_FILES['evidence_photo']['name'],
-                PATHINFO_EXTENSION
-            )
-        );
+        // Hapus header base64
+        $image = preg_replace('#^data:image/\w+;base64,#i', '', $image);
 
-        if (in_array($ext, $allowed)) {
+        // Ganti spasi menjadi +
+        $image = str_replace(' ', '+', $image);
 
-            $filename =
-                'LD_' .
-                date('YmdHis') .
-                '_' .
-                rand(1000, 9999) .
-                '.' .
-                $ext;
+        $imageData = base64_decode($image);
+
+        if ($imageData !== false) {
 
             $upload_dir = '../../uploads/';
 
@@ -65,14 +58,19 @@ if (isset($_POST['btn_save'])) {
                 mkdir($upload_dir, 0777, true);
             }
 
-            if (
-                move_uploaded_file(
-                    $_FILES['evidence_photo']['tmp_name'],
-                    $upload_dir . $filename
-                )
-            ) {
-                $evidence_photo = $filename;
-            }
+            $filename =
+                'LD_' .
+                date('YmdHis') .
+                '_' .
+                rand(1000, 9999) .
+                '.jpg';
+
+            file_put_contents(
+                $upload_dir . $filename,
+                $imageData
+            );
+
+            $evidence_photo = $filename;
         }
     }
 
@@ -316,14 +314,54 @@ $actionData = mysqli_query(
                             </div>
                             <!-- EVIDENCE PHOTO -->
                             <div class="mb-3">
-                                <input type="file"
-                                    id="evidence_photo"
-                                    name="evidence_photo"
-                                    class="form-control"
-                                    accept="image/*"
-                                    capture="environment">
-
-                                <small id="photo_info" class="text-success"></small>
+                                <label class="form-label fw-bold">
+                                    Evidence Photo
+                                </label>
+                                <div class="border rounded p-2 bg-light">
+                                    <video
+                                        id="camera"
+                                        autoplay
+                                        playsinline
+                                        muted
+                                        class="w-100 rounded"
+                                        style="max-height:350px;display:none;">
+                                    </video>
+                                    <canvas
+                                        id="canvas"
+                                        style="display:none;">
+                                    </canvas>
+                                    <img
+                                        id="preview"
+                                        class="img-fluid rounded mt-2"
+                                        style="display:none;">
+                                    <input
+                                        type="hidden"
+                                        id="photo_base64"
+                                        name="photo_base64">
+                                    <div class="mt-3 d-flex gap-2">
+                                        <button
+                                            type="button"
+                                            class="btn btn-primary"
+                                            onclick="openCamera()">
+                                            Open Camera
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-success"
+                                            onclick="capturePhoto()">
+                                            Capture Photo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger"
+                                            onclick="stopCamera()">
+                                            Close Camera
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        Setelah Capture Photo, klik SAVE LINE DROP.
+                                    </small>
+                                </div>
                             </div>
                             <!-- BUTTON -->
                             <div class="d-grid">
@@ -341,8 +379,12 @@ $actionData = mysqli_query(
     </div>
     <script src="../../js/browser-image-compression.js"></script>
     <script>
-        let html5QrCode;
-        // START SCAN
+        let html5QrCode = null;
+        let cameraStream = null;
+
+        // =======================
+        // START QR SCAN
+        // =======================
         function startScan() {
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({
@@ -355,88 +397,78 @@ $actionData = mysqli_query(
                     }
                 },
                 function(decodedText) {
-                    // Isi Product ID
                     document.getElementById("product_id").value = decodedText;
-                    // Ambil 8 digit terakhir
                     let modelCode = decodedText.slice(-8);
-                    // Isi model code
                     document.getElementById("model_code").value = modelCode;
-                    // Stop camera
                     stopScan();
+                    openCamera();
                 },
-                function(errorMessage) {
-                    // ignore
-                }
-            ).catch((err) => {
-                alert("Gagal membuka kamera : " + err);
+                function(errorMessage) {}
+            ).catch(function(err) {
+                alert("Camera Error : " + err);
             });
         }
-
-        // STOP CAMERA
+        // STOP QR SCAN
         function stopScan() {
             if (html5QrCode) {
-                html5QrCode.stop().then(() => {
+                html5QrCode.stop().then(function() {
                     html5QrCode.clear();
                 });
             }
         }
-    </script>
-    <script>
-        document.getElementById('evidence_photo').addEventListener(
-            'change',
-            async function(e) {
-
-                const file = e.target.files[0];
-
-                if (!file) return;
-
-                try {
-
-                    const options = {
-                        maxSizeMB: 0.2,
-                        maxWidthOrHeight: 1000,
-                        initialQuality: 0.6,
-                        useWebWorker: true
-                    };
-
-                    const compressedBlob =
-                        await imageCompression(file, options);
-
-                    const compressedFile =
-                        new File(
-                            [compressedBlob],
-                            file.name, {
-                                type: compressedBlob.type,
-                                lastModified: Date.now()
-                            }
-                        );
-
-                    const dt = new DataTransfer();
-
-                    dt.items.add(compressedFile);
-
-                    this.files = dt.files;
-
-                    console.log(
-                        'Original:',
-                        (file.size / 1024 / 1024).toFixed(2),
-                        'MB'
-                    );
-
-                    console.log(
-                        'Compressed:',
-                        (compressedFile.size / 1024 / 1024).toFixed(2),
-                        'MB'
-                    );
-
-                } catch (err) {
-
-                    console.error(err);
-
-                }
-
+        // OPEN CAMERA
+        async function openCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    }
+                });
+                document.getElementById("camera").srcObject = cameraStream;
+                document.getElementById("camera").style.display = "block";
+            } catch (err) {
+                alert("Tidak bisa membuka kamera.");
             }
-        );
+        }
+
+        // CAPTURE PHOTO
+        function capturePhoto() {
+            const video = document.getElementById("camera");
+            const canvas = document.getElementById("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0);
+            const image = canvas.toDataURL("image/jpeg", 0.8);
+            // Simpan ke input hidden
+            document.getElementById("photo_base64").value = image;
+            // Preview hasil foto
+            document.getElementById("preview").src = image;
+            document.getElementById("preview").style.display = "block";
+            // Tutup kamera otomatis
+            stopCamera();
+            alert("Photo berhasil diambil.");
+        }
+
+        // STOP CAMERA
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                document.getElementById("camera").srcObject = null;
+                cameraStream = null;
+            }
+        }
+        // SAVE FORM
+        document.querySelector("form").addEventListener("submit", function(e) {
+            if (document.getElementById("photo_base64").value == "") {
+                e.preventDefault();
+                alert("Silakan Capture Photo terlebih dahulu.");
+                return false;
+            }
+        });
+        window.onbeforeunload = function() {
+            stopCamera();
+        };
     </script>
 </body>
 
