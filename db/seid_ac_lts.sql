@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jul 08, 2026 at 03:18 AM
+-- Host: localhost
+-- Generation Time: Jul 13, 2026 at 04:51 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -44,9 +44,23 @@ INSERT INTO `action_master` (`action_id`, `action_name`, `area`, `created_at`) V
 (4, 'Repair Part', 'IDU', '2026-07-08 08:06:52'),
 (5, 'Retry EPROM', 'IDU', '2026-07-08 08:07:12'),
 (6, 'Change Part Vendor', 'IDU', '2026-07-08 08:07:57'),
-(7, 'Change Part', 'ODU', '2026-07-08 08:17:02'),
 (8, 'Repair Part', 'ODU', '2026-07-08 08:17:07'),
-(9, 'Change Coupler', 'ODU', '2026-07-08 08:17:31');
+(9, 'Change Coupler', 'ODU', '2026-07-08 08:17:31'),
+(10, 'Rebrazing', 'ODU', '2026-07-09 09:55:34'),
+(11, 'Revaccum', 'ODU', '2026-07-09 09:55:53'),
+(12, 'Recharge', 'ODU', '2026-07-09 09:56:16'),
+(13, 'Change PWB A228', 'ODU', '2026-07-09 09:57:49'),
+(14, 'Change PWB A430', 'ODU', '2026-07-09 09:58:04'),
+(15, 'Change PWB A560', 'ODU', '2026-07-09 09:58:26'),
+(16, 'Change Vacuum Pipe - Rebrazing - Recharging', 'ODU', '2026-07-10 16:12:42'),
+(17, 'Change Base Pan', 'ODU', '2026-07-10 16:13:05'),
+(18, 'Change Fan Motor', 'ODU', '2026-07-10 16:13:25'),
+(19, 'Change Front Panel', 'ODU', '2026-07-10 16:13:38'),
+(20, 'Change Top Table', 'ODU', '2026-07-10 16:13:49'),
+(21, 'Change Condensor ', 'ODU', '2026-07-10 16:14:10'),
+(22, 'Change Side Cover R', 'ODU', '2026-07-10 16:14:42'),
+(23, 'Change Side Cover L', 'ODU', '2026-07-10 16:14:53'),
+(24, 'Change Compressor ', 'ODU', '2026-07-10 16:15:15');
 
 -- --------------------------------------------------------
 
@@ -103,19 +117,18 @@ INSERT INTO `defect_master` (`defect_id`, `defect_name`, `area`, `created_at`) V
 (14, 'Cabinet', 'IDU', '2026-07-08 07:56:17'),
 (15, 'Open Panel', 'IDU', '2026-07-08 07:56:28'),
 (16, 'PWB - Horizontal Louver OFF', 'IDU', '2026-07-08 07:57:15'),
-(17, 'Leak - Condensor', 'ODU', '2026-07-08 08:08:28'),
-(18, 'Leak - Capillary', 'ODU', '2026-07-08 08:09:20'),
-(19, 'Leak - Coupler Capillary', 'ODU', '2026-07-08 08:10:18'),
-(20, 'Leak - Coupler 2 Way', 'ODU', '2026-07-08 08:10:25'),
-(21, 'Leak - Coupler 3 Way', 'ODU', '2026-07-08 08:10:32'),
-(22, 'Leak - Ultrasonic Welding', 'ODU', '2026-07-08 08:10:46'),
 (23, 'High Wattage', 'ODU', '2026-07-08 08:11:15'),
 (24, 'Low Wattage', 'ODU', '2026-07-08 08:11:24'),
 (25, 'High Pressure', 'ODU', '2026-07-08 08:11:42'),
-(26, 'Leak - U Bend', 'ODU', '2026-07-08 08:12:09'),
-(27, 'Leak - Outlet Pipe', 'ODU', '2026-07-08 08:12:15'),
-(28, 'Leak - Inlet Pipe', 'ODU', '2026-07-08 08:12:23'),
-(29, 'Tube Blockage - Capillary', 'ODU', '2026-07-08 08:15:10');
+(31, 'High Vacuum ', 'ODU', '2026-07-10 13:19:11'),
+(32, 'leak test detected', 'ODU', '2026-07-10 13:19:38'),
+(33, 'Min Start Up', 'ODU', '2026-07-10 13:19:56'),
+(34, 'Ele inspect ', 'ODU', '2026-07-10 13:20:06'),
+(35, 'Charging To Slow ', 'ODU', '2026-07-10 13:20:47'),
+(36, 'Checker no respon', 'ODU', '2026-07-10 13:21:27'),
+(37, 'Error code checker', 'ODU', '2026-07-10 13:22:02'),
+(38, 'NG Output Vacum line', 'ODU', '2026-07-10 13:22:57'),
+(39, 'NG output finishing', 'ODU', '2026-07-10 13:23:13');
 
 -- --------------------------------------------------------
 
@@ -133,10 +146,18 @@ CREATE TABLE `line_drop_transaction` (
   `rootcause_id` int(11) NOT NULL,
   `action_id` int(11) NOT NULL,
   `remark` text DEFAULT NULL,
+  `evidence_photo` varchar(255) DEFAULT NULL,
   `created_by` varchar(30) DEFAULT NULL,
   `created_name` varchar(50) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `line_drop_transaction`
+--
+
+INSERT INTO `line_drop_transaction` (`transaction_id`, `product_id`, `model_code`, `area`, `defect_id`, `category_id`, `rootcause_id`, `action_id`, `remark`, `evidence_photo`, `created_by`, `created_name`, `created_at`) VALUES
+(14, '5195DBZ3AHA5BEY2', 'AHA5BEY2', 'ODU', 25, 3, 18, 16, '', '', 'rodu_c', 'Repairman ODU C', '2026-07-13 08:43:21');
 
 -- --------------------------------------------------------
 
@@ -186,14 +207,13 @@ INSERT INTO `model_master` (`model_id`, `model_name`, `area`, `created_at`) VALU
 (28, 'AHXP1DSW', 'IDU', '2026-07-08 07:47:26'),
 (29, 'AHX3DEW', 'IDU', '2026-07-08 07:47:26'),
 (30, 'AHXP3DSW', 'IDU', '2026-07-08 07:47:26'),
-(31, 'AUA5BEY2', 'ODU', '2026-07-08 07:47:34'),
-(32, 'AUA5BBY2', 'ODU', '2026-07-08 07:47:34'),
-(33, 'AUA5BMY2', 'ODU', '2026-07-08 07:47:34'),
+(31, 'AUA5BEY2R', 'ODU', '2026-07-08 07:47:34'),
+(32, 'AUA5BBY2R', 'ODU', '2026-07-08 07:47:34'),
+(33, 'AUA5BMY2R', 'ODU', '2026-07-08 07:47:34'),
 (34, 'AUA5DEY', 'ODU', '2026-07-08 07:47:34'),
 (35, 'AUA5CAY', 'ODU', '2026-07-08 07:47:34'),
 (36, 'AUA5DHY', 'ODU', '2026-07-08 07:47:34'),
-(37, 'AUA7BEY', 'ODU', '2026-07-08 07:47:34'),
-(38, 'AUAP7BMY', 'ODU', '2026-07-08 07:47:34'),
+(37, 'AUA7DHY', 'ODU', '2026-07-08 07:47:34'),
 (39, 'AUA7BEY2', 'ODU', '2026-07-08 07:47:34'),
 (40, 'AUA7BMY2', 'ODU', '2026-07-08 07:47:34'),
 (41, 'AUA7DEY', 'ODU', '2026-07-08 07:47:34'),
@@ -214,7 +234,10 @@ INSERT INTO `model_master` (`model_id`, `model_name`, `area`, `created_at`) VALU
 (56, 'AUX1DEW', 'ODU', '2026-07-08 07:47:34'),
 (57, 'AUX3DEW', 'ODU', '2026-07-08 07:47:34'),
 (58, 'AUX1DSW', 'ODU', '2026-07-08 07:47:34'),
-(59, 'AUX3DSW', 'ODU', '2026-07-08 07:47:34');
+(59, 'AUX3DSW', 'ODU', '2026-07-08 07:47:34'),
+(124, 'AUA5BBY2G', 'ODU', '2026-07-09 09:34:06'),
+(125, 'AUA5BEY2G', 'ODU', '2026-07-09 09:34:26'),
+(126, 'AUA5BMY2G', 'ODU', '2026-07-09 09:34:39');
 
 -- --------------------------------------------------------
 
@@ -237,9 +260,29 @@ INSERT INTO `rootcause_master` (`rootcause_id`, `rootcause_name`, `area`, `creat
 (2, 'PWB NG', 'IDU', '2026-07-08 08:04:19'),
 (3, 'NG Part Inhouse', 'IDU', '2026-07-08 08:05:35'),
 (4, 'NG Part Vendor', 'IDU', '2026-07-08 08:05:44'),
-(5, 'Slow Charging', 'ODU', '2026-07-08 08:15:52'),
-(6, 'Dented - U Bend', 'ODU', '2026-07-08 08:16:20'),
-(7, 'Touching - Piping Part', 'ODU', '2026-07-08 08:16:43');
+(6, 'Dented ', 'ODU', '2026-07-08 08:16:20'),
+(7, 'Touching - Piping Part', 'ODU', '2026-07-08 08:16:43'),
+(9, 'Leak Coupler Vacuum', 'ODU', '2026-07-10 16:05:30'),
+(10, 'Leak Coupler 2 Way', 'ODU', '2026-07-10 16:05:41'),
+(11, 'Leak Coupler 3 Way', 'ODU', '2026-07-10 16:05:54'),
+(12, 'Leak C Bend', 'ODU', '2026-07-10 16:06:07'),
+(13, 'Leak U Bend', 'ODU', '2026-07-10 16:06:21'),
+(14, 'Leak Y Bend', 'ODU', '2026-07-10 16:06:32'),
+(15, 'Leak Lead Tube Condensor', 'ODU', '2026-07-10 16:06:45'),
+(16, 'Blocked Vacuum Capillary ', 'ODU', '2026-07-10 16:07:33'),
+(17, 'Blocked Capillary to Two Way', 'ODU', '2026-07-10 16:08:09'),
+(18, 'Less R32', 'ODU', '2026-07-10 16:09:10'),
+(19, 'Over charge R32', 'ODU', '2026-07-10 16:09:24'),
+(20, 'Leak Inlet con', 'ODU', '2026-07-10 16:09:46'),
+(21, 'Leak Outlet Condensor', 'ODU', '2026-07-10 16:09:53'),
+(22, 'Leak Suction ', 'ODU', '2026-07-10 16:10:00'),
+(23, 'Leak Discharge ', 'ODU', '2026-07-10 16:10:07'),
+(24, 'Leak Capillary ', 'ODU', '2026-07-10 16:10:18'),
+(25, 'Leak Inner Hairpin Condensor', 'ODU', '2026-07-10 16:10:35'),
+(26, 'Piping Bending', 'ODU', '2026-07-10 16:10:55'),
+(27, 'PWB NG', 'ODU', '2026-07-10 16:11:24'),
+(28, 'Motor Fan Off', 'ODU', '2026-07-10 16:16:55'),
+(29, 'Compressor Off ', 'ODU', '2026-07-10 16:17:12');
 
 -- --------------------------------------------------------
 
@@ -262,19 +305,19 @@ CREATE TABLE `user_master` (
 --
 
 INSERT INTO `user_master` (`user_id`, `username`, `password`, `name`, `area`, `role`, `created_at`) VALUES
-(1, 'admin01', 'SeidMail01', 'Admin', 'IDU', 'ADMIN', '2026-05-26 08:46:46'),
-(6, 'repairman_idu_a', 'SeidMail01', 'Repairman IDU A', 'IDU', 'REPAIRMAN', '2026-05-28 13:36:00'),
-(7, 'leader_idu_a', 'SeidMail01', 'Dewa & Rifki', 'IDU', 'LEADER', '2026-07-07 14:00:15'),
-(8, 'leader_odu_a', 'SeidMail01', 'Irwanto', 'ODU', 'LEADER', '2026-07-07 14:00:36'),
-(9, 'leader_idu_b', 'SeidMail01', 'Irfan & Rohman', 'IDU', 'LEADER', '2026-07-08 07:38:31'),
-(10, 'leader_idu_c', 'SeidMail01', 'Haris & Mufti', 'IDU', 'LEADER', '2026-07-08 07:38:51'),
-(11, 'leader_odu_b', 'SeidMail01', 'Adi & Nurdin', 'ODU', 'LEADER', '2026-07-08 07:39:21'),
-(12, 'leader_odu_c', 'SeidMail01', 'Romly & Mufti', 'ODU', 'LEADER', '2026-07-08 07:39:50'),
-(13, 'repairman_idu_b', 'SeidMail01', 'Repairman IDU B', 'IDU', 'REPAIRMAN', '2026-07-08 07:40:26'),
-(14, 'repairman_idu_c', 'SeidMail01', 'Repairman IDU C', 'IDU', 'REPAIRMAN', '2026-07-08 07:40:53'),
-(15, 'repairman_odu_b', 'SeidMail01', 'Repairman ODU B', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:11'),
-(16, 'repairman_odu_c', 'SeidMail01', 'Repairman ODU C', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:26'),
-(17, 'repairman_odu_a', 'SeidMail01', 'Repairman ODU A', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:47');
+(1, 'lidu_c', 'SeidMail01', 'Haris', 'IDU', 'LEADER', '2026-05-26 08:46:46'),
+(7, 'lidu_b', 'SeidMail01', 'Irfan & Rohman', 'IDU', 'LEADER', '2026-07-07 14:00:15'),
+(8, 'lidu_a', 'SeidMail01', 'Dewa & Rifki', 'IDU', 'LEADER', '2026-07-07 14:00:36'),
+(9, 'lodu_c', 'SeidMail01', 'Romly & Mufti', 'ODU', 'LEADER', '2026-07-08 07:38:31'),
+(10, 'lodu_b', 'SeidMail01', 'Adi & Nurdin', 'ODU', 'LEADER', '2026-07-08 07:38:51'),
+(11, 'lodu_a', 'SeidMail01', 'Irwanto & Nugroho', 'ODU', 'LEADER', '2026-07-08 07:39:21'),
+(12, 'ridu_c', '33445566', 'Repairman IDU C', 'IDU', 'REPAIRMAN', '2026-07-08 07:39:50'),
+(13, 'ridu_b', '22334455', 'Repairman IDU B', 'IDU', 'REPAIRMAN', '2026-07-08 07:40:26'),
+(14, 'ridu_a', '11223344', 'Repairman IDU A', 'IDU', 'REPAIRMAN', '2026-07-08 07:40:53'),
+(15, 'rodu_c', '33445566', 'Repairman ODU C', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:11'),
+(16, 'rodu_b', '22334455', 'Repairman ODU B', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:26'),
+(17, 'rodu_a', '11223344', 'Repairman ODU A', 'ODU', 'REPAIRMAN', '2026-07-08 07:41:47'),
+(18, 'radmin', 'SeidMail01', 'Muhammad Raffi', 'IDU', 'ADMIN', '2026-07-09 07:42:19');
 
 --
 -- Indexes for dumped tables
@@ -331,7 +374,7 @@ ALTER TABLE `user_master`
 -- AUTO_INCREMENT for table `action_master`
 --
 ALTER TABLE `action_master`
-  MODIFY `action_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `action_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `category_master`
@@ -343,31 +386,31 @@ ALTER TABLE `category_master`
 -- AUTO_INCREMENT for table `defect_master`
 --
 ALTER TABLE `defect_master`
-  MODIFY `defect_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `defect_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `line_drop_transaction`
 --
 ALTER TABLE `line_drop_transaction`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `model_master`
 --
 ALTER TABLE `model_master`
-  MODIFY `model_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `model_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=127;
 
 --
 -- AUTO_INCREMENT for table `rootcause_master`
 --
 ALTER TABLE `rootcause_master`
-  MODIFY `rootcause_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `rootcause_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `user_master`
 --
 ALTER TABLE `user_master`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
