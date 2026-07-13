@@ -95,10 +95,7 @@ if (isset($_POST['btn_update'])) {
     $update_photo = "";
 
 
-    if (
-        isset($_FILES['evidence_photo']) &&
-        $_FILES['evidence_photo']['error'] == 0
-    ) {
+    if (!empty($_POST['photo_base64'])) {
 
 
         if (
@@ -106,19 +103,22 @@ if (isset($_POST['btn_update'])) {
             file_exists('../../uploads/' . $old['evidence_photo'])
         ) {
 
-            unlink(
-                '../../uploads/' . $old['evidence_photo']
-            );
+            unlink('../../uploads/' . $old['evidence_photo']);
         }
 
 
+        $image = $_POST['photo_base64'];
 
-        $ext = strtolower(
-            pathinfo(
-                $_FILES['evidence_photo']['name'],
-                PATHINFO_EXTENSION
-            )
+
+        $image = str_replace(
+            'data:image/jpeg;base64,',
+            '',
+            $image
         );
+
+
+        $image = base64_decode($image);
+
 
 
         $filename =
@@ -126,12 +126,12 @@ if (isset($_POST['btn_update'])) {
             date('YmdHis') .
             "_" .
             rand(1000, 9999) .
-            "." . $ext;
+            ".jpg";
 
 
-        move_uploaded_file(
-            $_FILES['evidence_photo']['tmp_name'],
-            '../../uploads/' . $filename
+        file_put_contents(
+            '../../uploads/' . $filename,
+            $image
         );
 
 
@@ -771,11 +771,53 @@ $data = mysqli_query($conn, $query);
 
                                                     <?php endif; ?>
 
-                                                    <input type="file"
-                                                        name="evidence_photo"
-                                                        class="form-control"
-                                                        accept="image/*"
-                                                        capture="environment">
+                                                    <div class="border rounded p-2 bg-light">
+
+                                                        <video
+                                                            id="camera<?= $row['transaction_id']; ?>"
+                                                            autoplay
+                                                            playsinline
+                                                            muted
+                                                            class="w-100 rounded"
+                                                            style="max-height:300px;display:none;">
+                                                        </video>
+
+
+                                                        <canvas
+                                                            id="canvas<?= $row['transaction_id']; ?>"
+                                                            style="display:none;">
+                                                        </canvas>
+
+
+                                                        <img
+                                                            id="preview<?= $row['transaction_id']; ?>"
+                                                            class="img-fluid rounded mt-2"
+                                                            style="max-width:200px;">
+
+
+                                                        <input type="hidden"
+                                                            name="photo_base64"
+                                                            id="photo_base64<?= $row['transaction_id']; ?>">
+
+
+                                                        <div class="mt-2 d-flex gap-2">
+
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-sm"
+                                                                onclick="openEditCamera(<?= $row['transaction_id']; ?>)">
+                                                                Open Camera
+                                                            </button>
+
+
+                                                            <button type="button"
+                                                                class="btn btn-success btn-sm"
+                                                                onclick="captureEditPhoto(<?= $row['transaction_id']; ?>)">
+                                                                Capture
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
 
                                                     <small class="text-muted">
                                                         Kosongkan jika tidak ingin mengganti foto
@@ -842,6 +884,107 @@ $data = mysqli_query($conn, $query);
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let editStreams = {};
+
+
+        // OPEN CAMERA EDIT
+        async function openEditCamera(id) {
+
+            try {
+
+                let video = document.getElementById("camera" + id);
+
+
+                editStreams[id] = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    }
+                });
+
+
+                video.srcObject = editStreams[id];
+                video.style.display = "block";
+
+
+            } catch (err) {
+
+                alert("Camera tidak bisa dibuka");
+
+            }
+
+        }
+
+
+
+        // CAPTURE EDIT PHOTO
+        function captureEditPhoto(id) {
+
+            let video = document.getElementById("camera" + id);
+
+            let canvas = document.getElementById("canvas" + id);
+
+            let preview = document.getElementById("preview" + id);
+
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+
+            let ctx = canvas.getContext("2d");
+
+            ctx.drawImage(video, 0, 0);
+
+
+
+            let image = canvas.toDataURL(
+                "image/jpeg",
+                0.8
+            );
+
+
+            document.getElementById(
+                "photo_base64" + id
+            ).value = image;
+
+
+            preview.src = image;
+
+
+            stopEditCamera(id);
+
+
+        }
+
+
+
+        // STOP CAMERA
+
+        function stopEditCamera(id) {
+
+            let video = document.getElementById("camera" + id);
+
+
+            if (editStreams[id]) {
+
+                editStreams[id]
+                    .getTracks()
+                    .forEach(track => {
+                        track.stop();
+                    });
+
+
+                editStreams[id] = null;
+
+            }
+
+
+            video.srcObject = null;
+
+            video.style.display = "none";
+
+        }
+    </script>
 
 </body>
 

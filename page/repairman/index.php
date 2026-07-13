@@ -351,12 +351,6 @@ $actionData = mysqli_query(
                                             onclick="capturePhoto()">
                                             Capture Photo
                                         </button>
-                                        <button
-                                            type="button"
-                                            class="btn btn-danger"
-                                            onclick="stopCamera()">
-                                            Close Camera
-                                        </button>
                                     </div>
                                     <small class="text-muted d-block mt-2">
                                         Setelah Capture Photo, klik SAVE LINE DROP.
@@ -416,6 +410,7 @@ $actionData = mysqli_query(
                 });
             }
         }
+
         // OPEN CAMERA
         async function openCamera() {
             try {
@@ -424,8 +419,16 @@ $actionData = mysqli_query(
                         facingMode: "environment"
                     }
                 });
-                document.getElementById("camera").srcObject = cameraStream;
-                document.getElementById("camera").style.display = "block";
+
+                const video = document.getElementById("camera");
+
+                video.srcObject = cameraStream;
+                video.style.display = "block";
+                video.style.height = "auto";
+
+                // sembunyikan foto lama jika ambil ulang
+                document.getElementById("preview").style.display = "none";
+
             } catch (err) {
                 alert("Tidak bisa membuka kamera.");
             }
@@ -435,28 +438,46 @@ $actionData = mysqli_query(
         function capturePhoto() {
             const video = document.getElementById("camera");
             const canvas = document.getElementById("canvas");
+            const preview = document.getElementById("preview");
+
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+
             const ctx = canvas.getContext("2d");
             ctx.drawImage(video, 0, 0);
+
             const image = canvas.toDataURL("image/jpeg", 0.8);
-            // Simpan ke input hidden
+
+            // Simpan base64
             document.getElementById("photo_base64").value = image;
-            // Preview hasil foto
-            document.getElementById("preview").src = image;
-            document.getElementById("preview").style.display = "block";
-            // Tutup kamera otomatis
+
+            // Tampilkan hasil foto
+            preview.src = image;
+            preview.style.display = "block";
+
+            // Tutup kamera
             stopCamera();
+
             alert("Photo berhasil diambil.");
         }
 
         // STOP CAMERA
         function stopCamera() {
+            const video = document.getElementById("camera");
+
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
-                document.getElementById("camera").srcObject = null;
                 cameraStream = null;
             }
+
+            // Bersihkan video
+            video.pause();
+            video.srcObject = null;
+
+            // Hilangkan area kosong kamera
+            video.style.display = "none";
+            video.style.height = "0px";
+            video.style.margin = "0px";
         }
         // SAVE FORM
         document.querySelector("form").addEventListener("submit", function(e) {
