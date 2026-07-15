@@ -114,11 +114,11 @@ if ($totalLineDrop >= 49) {
 } elseif ($totalLineDrop >= 25) {
     $colorClass = "text-warning";
     $bgClass = "border-warning";
-    $statusText = "WARNING";
+    $statusText = "MEDIUM";
 } else {
     $colorClass = "text-success";
     $bgClass = "border-success";
-    $statusText = "NORMAL";
+    $statusText = "LOW";
 }
 // ======================
 // TOTAL MODEL
