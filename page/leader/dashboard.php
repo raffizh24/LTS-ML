@@ -104,6 +104,22 @@ $totalQuery = mysqli_query(
     "
 );
 $totalData = mysqli_fetch_assoc($totalQuery);
+$totalLineDrop = $totalData['total'];
+
+// Setting warna berdasarkan range
+if ($totalLineDrop >= 49) {
+    $colorClass = "text-danger";
+    $bgClass = "border-danger";
+    $statusText = "HIGH";
+} elseif ($totalLineDrop >= 25) {
+    $colorClass = "text-warning";
+    $bgClass = "border-warning";
+    $statusText = "WARNING";
+} else {
+    $colorClass = "text-success";
+    $bgClass = "border-success";
+    $statusText = "NORMAL";
+}
 // ======================
 // TOTAL MODEL
 // ======================
@@ -436,14 +452,29 @@ $historyQuery = mysqli_query(
         <!-- SUMMARY -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm <?= $bgClass; ?>">
                     <div class="card-body text-center">
                         <h6 class="text-muted">
                             TOTAL LINE DROP
                         </h6>
-                        <h1 class="fw-bold text-danger">
-                            <?= $totalData['total']; ?>
+
+                        <h1 class="fw-bold <?= $colorClass; ?>">
+                            <?= $totalLineDrop; ?>
                         </h1>
+
+                        <span class="badge 
+                    <?php
+                    if ($totalLineDrop >= 49) {
+                        echo 'bg-danger';
+                    } elseif ($totalLineDrop >= 25) {
+                        echo 'bg-warning text-dark';
+                    } else {
+                        echo 'bg-success';
+                    }
+                    ?>">
+                            <?= $statusText; ?>
+                        </span>
+
                     </div>
                 </div>
             </div>
