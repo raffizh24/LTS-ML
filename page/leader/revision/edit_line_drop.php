@@ -5,7 +5,7 @@ require '../../../conn.php';
 // CEK LOGIN
 // ======================
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'LEADER') {
-    header("Location: ../../login.php");
+    header("Location: ../../index.php");
     exit;
 }
 

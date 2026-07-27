@@ -6,14 +6,14 @@ require '../../conn.php';
 // CEK LOGIN
 // =========================
 if (!isset($_SESSION['role'])) {
-    header("Location: ../../login.php");
+    header("Location: ../../index.php");
     exit;
 }
 
 if (
     $_SESSION['role'] != 'REPAIRMAN'
 ) {
-    header("Location: ../../login.php");
+    header("Location: ../../index.php");
     exit;
 }
 
